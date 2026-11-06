@@ -1,0 +1,37 @@
+# 전사 엔진
+faster-whisper>=1.2
+numpy
+nvidia-cublas-cu12
+nvidia-cudnn-cu12
+
+# 웹 서버
+fastapi>=0.115
+uvicorn>=0.30
+python-multipart>=0.0.9
+
+# 강의자료 추출 (tools/pdf_pages.py)
+pymupdf>=1.24
+python-pptx>=1.0
+# 위 두 패키지와 함께 설치된 의존성 (pymupdf 2.0 → pymupdf-layout, pymupdf4llm, networkx, tabulate / python-pptx → lxml, XlsxWriter)
+pymupdf-layout
+pymupdf4llm
+networkx
+tabulate
+lxml
+XlsxWriter
+
+# 그림 페이지 OCR (tools/ocr.py, 무료·로컬 CPU). 추론 엔진 onnxruntime은 faster-whisper가 이미 설치함
+# 한국어 인식 모델(korean_PP-OCRv5_rec_mobile)은 첫 실행 때 한 번 내려받아 .venv에 저장됨
+rapidocr>=3.10
+opencv-python-headless
+shapely
+pyclipper
+omegaconf
+colorlog
+
+# 한국어 형태소 분석 (tools/korean.py, 무료·로컬): 한국어끼리 바꾸는 교정 규칙의 틀린 쪽이 사전에 있는 낱말인지 검사
+# kiwipiepy-model은 사전·모델 파일 약 104MB. 없으면 한국어→한국어 교정 규칙은 모두 사람 확인
+kiwipiepy==0.24.1
+kiwipiepy-model==0.24.0
+
+# 외부 프로그램: ffmpeg (winget install Gyan.FFmpeg)

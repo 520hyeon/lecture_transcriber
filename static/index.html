@@ -1,0 +1,1417 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>강의 전사</title>
+<style>
+:root{
+  --bg:#f6f7fb; --card:#fff; --text:#1d2433; --muted:#6b7385; --line:#e3e6ee;
+  --brand:#4f46e5; --brand2:#7c3aed; --brand-soft:#eef0ff;
+  --ok:#0f9d58; --warn:#b26a00; --warn-bg:#fff6e0; --err:#c62828; --err-bg:#fdecec;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#12141b; --card:#1b1e28; --text:#e6e8ef; --muted:#9aa2b5; --line:#2c3040;
+  --brand-soft:#262a45; --warn-bg:#3a2e12; --warn:#f0b54a; --err-bg:#3d1c1c; --err:#ff8a80; --ok:#4cd38a;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 "Pretendard","Malgun Gothic",system-ui,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:880px;margin:0 auto;padding:0 16px 60px}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px}
+.brand .logo{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--brand),var(--brand2));display:grid;place-items:center;color:#fff}
+.badge{font-size:13px;padding:5px 11px;border-radius:999px;background:var(--card);border:1px solid var(--line);display:flex;align-items:center;gap:7px;white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.badge.loading .dot{background:#f5a623;animation:pulse 1s infinite alternate}
+.badge.ready .dot{background:var(--ok)} .badge.error .dot{background:var(--err)}
+@keyframes pulse{to{opacity:.3}}
+.alert{border-radius:10px;padding:10px 14px;margin:8px 0;font-size:14px}
+.alert.warn{background:var(--warn-bg);color:var(--warn)} .alert.err{background:var(--err-bg);color:var(--err)}
+.alert code{font-family:var(--mono);background:rgba(0,0,0,.06);padding:1px 5px;border-radius:4px}
+.hero{text-align:center;margin:18px 0 18px}
+.hero h1{font-size:34px;margin:0 0 6px;letter-spacing:-.5px}
+.hero p{margin:0;color:var(--muted)}
+.settings{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}
+.settings label{display:flex;align-items:center;gap:8px;font-weight:600}
+select,input[type=text],input[type=number],textarea{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+textarea{width:100%;resize:vertical;font-size:14px}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:7px 14px;cursor:pointer;text-decoration:none;color:inherit;display:inline-block}
+.btn:hover{border-color:var(--brand)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.danger{color:var(--err)}
+.btn:disabled{opacity:.5;cursor:default}
+.adv{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px;display:grid;gap:12px}
+.adv .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.adv .field>span{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:4px}
+.adv .btns{display:flex;flex-wrap:wrap;gap:8px}
+.hint{font-size:12.5px;color:var(--muted)}
+
+.drop{position:relative;border-radius:18px;background:linear-gradient(135deg,var(--brand),var(--brand2));padding:14px;color:#fff;transition:transform .15s, box-shadow .15s}
+.drop .inner{border:2.5px dashed rgba(255,255,255,.55);border-radius:12px;padding:56px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.drop.over{transform:scale(1.015);box-shadow:0 12px 40px rgba(79,70,229,.45)}
+.drop.over .inner{border-color:#fff;background:rgba(255,255,255,.1)}
+.drop svg{width:58px;height:58px;opacity:.95}
+.drop .pick{background:#fff;color:var(--brand);border:0;border-radius:10px;padding:13px 30px;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.15)}
+.drop .pick:hover{transform:translateY(-1px)}
+.drop p{margin:0;opacity:.9}
+.drop.compact .inner{padding:20px;flex-direction:row;justify-content:center;flex-wrap:wrap}
+.drop.compact svg{width:30px;height:30px}
+.drop .formats{font-size:12.5px;opacity:.75}
+.drop.compact .formats{display:none}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:16px}
+.card h2{font-size:16px;margin:0 0 10px}
+.qitem,.hitem{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;cursor:pointer}
+.qitem:hover,.hitem:hover{background:var(--brand-soft)}
+.qitem .name,.hitem .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hitem .meta{font-size:12.5px;color:var(--muted);white-space:nowrap}
+.hitem.sel{background:var(--brand-soft)}
+.st{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--line);white-space:nowrap;min-width:64px;text-align:center}
+.st.done{background:#dff5e8;color:#0b6b3c} .st.error{background:var(--err-bg);color:var(--err)}
+.st.transcribing,.st.converting{background:var(--brand-soft);color:var(--brand)}
+.st.cancelled,.st.interrupted{background:var(--warn-bg);color:var(--warn)}
+@media (prefers-color-scheme:dark){.st.done{background:#173a28;color:#7ee2a8}.st.transcribing,.st.converting{color:#a5a8ff}}
+.x{border:0;background:none;color:var(--muted);cursor:pointer;font-size:16px;padding:0 4px}
+
+.jobhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.jobname{font-weight:700;font-size:17px;word-break:break-all}
+.jobsub{color:var(--muted);font-size:13.5px}
+.bar{height:10px;border-radius:99px;background:var(--line);overflow:hidden;margin:14px 0 8px}
+.bar>div{height:100%;width:0;background:linear-gradient(90deg,var(--brand),var(--brand2));transition:width .4s}
+.bar.indet>div{width:30%!important;animation:indet 1.2s infinite ease-in-out}
+@keyframes indet{from{margin-left:-30%}to{margin-left:100%}}
+.stats{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13.5px;color:var(--muted)}
+.stats b{color:var(--text);font-variant-numeric:tabular-nums}
+.notices .alert{margin:10px 0 0}
+.tbox{position:relative;margin-top:12px}
+.transcript{height:420px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg);font-size:14.5px;white-space:pre-wrap;word-break:break-word}
+.transcript .ln{padding:1px 0}
+.transcript .ts{font-family:var(--mono);color:var(--brand);font-size:13px;margin-right:6px}
+.transcript mark{background:#ffe36e;color:#000;border-radius:3px}
+.transcript .empty{color:var(--muted);text-align:center;padding-top:40px}
+.toBottom{position:absolute;right:14px;bottom:12px;background:var(--brand);color:#fff;border:0;border-radius:99px;padding:6px 12px;cursor:pointer;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.replace{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.replace input{flex:1;min-width:120px}
+.subj{margin-top:4px}
+.tabs{display:flex;flex-wrap:wrap;gap:2px;border-bottom:1px solid var(--line);margin:-4px -4px 12px}
+.tab{border:0;background:none;padding:8px 12px;cursor:pointer;color:var(--muted);border-bottom:2.5px solid transparent;margin-bottom:-1px;display:flex;align-items:center;gap:6px}
+.tab:hover{color:var(--text)}
+.tab.on{color:var(--brand);border-bottom-color:var(--brand);font-weight:700}
+.tab .cnt{font-size:11px;background:var(--warn-bg);color:var(--warn);border-radius:99px;padding:0 6px;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip{font-size:13px;background:var(--bg);border:1px solid var(--line);border-radius:99px;padding:3px 10px}
+.chip b{font-variant-numeric:tabular-nums}
+.cmd{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+.cmd code{font-family:var(--mono);background:var(--card);border:1px solid var(--line);border-radius:6px;padding:5px 10px;color:var(--text)}
+.mlist{margin:6px 0 0;padding-left:18px;font-size:13.5px}
+.subj details{border-top:1px solid var(--line);padding:8px 0}
+.subj summary{cursor:pointer;font-weight:600;font-size:14px}
+.subj details .inner{margin-top:10px;display:grid;gap:10px}
+.subj .field>span{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:4px}
+.subj .checks{display:flex;flex-wrap:wrap;gap:14px;font-size:14px}
+.subj .checks label{display:flex;align-items:center;gap:6px}
+.gtable{width:100%;border-collapse:collapse;font-size:13.5px}
+.gtable th,.gtable td{text-align:left;padding:4px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.gtable th{color:var(--muted);font-weight:600;font-size:12.5px}
+.gscroll{max-height:280px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.sgroup{display:grid;gap:6px}
+.shead{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.shead .btn{padding:4px 10px;font-size:13px}
+.gtable tr.off td{color:var(--muted)}
+.star{color:var(--warn);font-size:12px;margin-left:4px}
+.subj .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.gtable .wrn{color:var(--warn);font-size:12.5px;margin-top:2px}
+.gtable .ex{font-size:12.5px;margin-top:2px;word-break:break-word}
+.gtable .ex ins{background:#bdf0cb;color:#000;text-decoration:none;border-radius:3px}
+.subj .gtable input.sedit{width:auto;min-width:90px;max-width:220px;padding:2px 6px;font-size:13px}
+.slist{display:grid;gap:2px;font-size:13.5px;max-height:240px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.slist label{display:flex;gap:8px;align-items:center}
+@media (prefers-color-scheme:dark){.gtable .ex ins{background:#1f5e33;color:#e6ffe9}}
+.work{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:10px;display:grid;gap:8px;font-size:14px}
+.work .whead{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.work .alert{margin:0}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--card);padding:5px 12px;cursor:pointer;font-size:13px}
+.seg button.on{background:var(--brand);color:#fff}
+.ulist{display:flex;flex-wrap:wrap;gap:4px}
+.ulist button{border:1px solid var(--line);background:var(--card);border-radius:6px;font-family:var(--mono);font-size:12px;padding:1px 6px;cursor:pointer}
+.transcript .ph{font-weight:700;margin:12px 0 4px;white-space:normal}
+.transcript .ph:first-child{margin-top:2px}
+.transcript .ln.chg{background:var(--brand-soft);border-radius:4px}
+.transcript .ln.rev{opacity:.75}
+.transcript ins{background:#bdf0cb;color:#000;text-decoration:none;border-radius:3px}
+.transcript del{background:#ffd0d0;color:#000;border-radius:3px}
+.transcript .flag{font-size:11px;font-weight:700;color:var(--warn);background:var(--warn-bg);border-radius:4px;padding:0 4px;margin-right:5px}
+.transcript .loc{border:0;background:none;color:var(--brand);cursor:pointer;font:inherit;font-size:13px;padding:0 3px;text-decoration:underline dotted}
+.transcript .rvb{border:1px solid var(--line);background:var(--card);border-radius:6px;font-size:11.5px;padding:0 6px;margin-left:6px;cursor:pointer;color:var(--muted)}
+.transcript .rvb:hover{color:var(--brand);border-color:var(--brand)}
+.transcript .hl{outline:2px solid var(--brand)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:grid;place-items:center;z-index:8;padding:16px}
+.mbox{background:var(--card);border-radius:12px;max-width:min(960px,100%);max-height:92vh;overflow:auto;padding:14px;display:grid;gap:8px}
+.mbox img{max-width:100%;border:1px solid var(--line);border-radius:6px;background:#fff}
+.mbox .mhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mbox .mhead b{flex:1}
+.subj input[type=text]{width:100%}
+.player{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+.player audio{flex:1;min-width:240px;height:36px}
+.transcript .pl,.transcript .ed{border:0;background:none;color:var(--muted);cursor:pointer;font-size:11px;padding:0 3px}
+.transcript .pl:hover,.transcript .ed:hover{color:var(--brand)}
+.transcript .ln .ed.opt{visibility:hidden}
+.transcript .ln:hover .ed.opt{visibility:visible}
+.transcript .miss{color:var(--warn);font-weight:600}
+.transcript .flag.h{color:var(--ok);background:var(--bg);border:1px solid var(--ok)}
+.transcript .medit{display:flex;gap:6px;align-items:center;margin:3px 0 3px 52px;white-space:normal}
+.transcript .medit input{flex:1;min-width:120px}
+.transcript .medit .btn{padding:3px 10px;font-size:13px}
+.rlist{display:grid;gap:4px;font-size:13px;max-height:260px;overflow:auto}
+.rlist .r{display:flex;gap:6px;align-items:baseline;flex-wrap:wrap}
+.rlist .r .st{min-width:0;font-size:11px}
+.pbox{font-size:13px;display:grid;gap:4px;word-break:break-word}
+.pbox code{font-family:var(--mono);font-size:12.5px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:4px 8px;display:block;white-space:pre-wrap}
+.prow{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:4px 10px;align-items:center;padding:8px 6px;border-bottom:1px solid var(--line)}
+.prow:last-child{border-bottom:0}
+.prow .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.prow .meta{grid-column:2/-1;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;font-size:13px;color:var(--muted)}
+.prow .meta select{padding:3px 6px;font-size:13px}
+.prow .meta select.need{border-color:var(--err);color:var(--err)}
+.prow .wrn{grid-column:2/-1;font-size:12.5px;color:var(--warn)}
+.prow .wrn code{font-family:var(--mono);background:var(--card);border:1px solid var(--line);border-radius:5px;padding:0 5px}
+.prow .wrn .btn{padding:2px 10px;font-size:12.5px;margin-left:6px}
+.src{font-size:11px;border:1px solid var(--line);border-radius:99px;padding:0 7px;color:var(--muted)}
+.pfoot{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:10px}
+.fgroup{margin-top:8px}
+.fgroup b{font-size:14px}
+.fgroup label{display:flex;gap:8px;align-items:center;font-size:13.5px;padding:2px 0}
+.part{font-size:11px;background:var(--brand-soft);color:var(--brand);border-radius:4px;padding:0 5px}
+.arow{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:8px 6px;border-bottom:1px solid var(--line);font-size:13.5px}
+.arow:last-child{border-bottom:0}
+.arow .name{font-weight:600;cursor:pointer}
+.arow .name:hover{color:var(--brand)}
+.arow code{font-family:var(--mono);font-size:12.5px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:2px 8px}
+.lgroup{border-left:3px solid var(--brand-soft);margin:4px 0 4px 4px;padding-left:6px}
+.lgroup .lhead{font-size:12.5px;color:var(--muted);padding:2px 4px}
+.ctable td:nth-child(3){white-space:nowrap;font-variant-numeric:tabular-nums}
+.nav{display:flex;gap:4px;margin-right:auto;margin-left:14px}
+.nav a{padding:6px 12px;border-radius:8px;color:var(--muted);text-decoration:none;font-weight:600;display:flex;align-items:center;gap:6px}
+.nav a:hover{color:var(--text)}
+.nav a.on{background:var(--brand-soft);color:var(--brand)}
+.cnt{font-size:11px;background:var(--warn-bg);color:var(--warn);border-radius:99px;padding:0 6px;font-weight:700}
+.alert.note{background:var(--brand-soft);color:var(--text)}
+.alert.note a{color:var(--brand);font-weight:600;cursor:pointer}
+.hero code{font-family:var(--mono);background:var(--card);border:1px solid var(--line);border-radius:5px;padding:0 5px}
+.lrow{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:9px 6px;border-bottom:1px solid var(--line);font-size:14px}
+.lrow:last-child{border-bottom:0}
+.lrow .name{font-weight:600;cursor:pointer;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.lrow .name:hover{color:var(--brand)}
+.lrow .sub{font-size:12px;color:var(--muted)}
+.lrow .act{margin-left:auto}
+.lrow .act .btn{padding:5px 12px;font-size:13.5px;white-space:nowrap}
+.lrow .act .btn.review{background:var(--warn-bg);border-color:var(--warn);color:var(--warn);font-weight:700}
+.lrow .act .done{color:var(--ok);font-weight:600;font-size:13.5px;cursor:pointer}
+.lrow .note{flex-basis:100%;font-size:12.5px;color:var(--muted)}
+.lmore{margin-top:6px}
+.review{border:2px solid var(--warn);border-radius:10px;padding:10px 12px;display:grid;gap:8px;background:var(--card)}
+.review .rhead{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.review .rhead b{font-size:15px}
+.ritem{border-top:1px solid var(--line);padding-top:8px;display:grid;gap:4px}
+.ritem .rtop{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px}
+.ritem .rtext{font-size:14.5px}
+.ritem .ract{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.ritem .ract .btn{padding:3px 10px;font-size:13px}
+.ritem .ract input{flex:1;min-width:160px}
+.ritem.done{opacity:.6}
+.kind{font-size:11.5px;font-weight:700;border-radius:4px;padding:0 6px;background:var(--warn-bg);color:var(--warn)}
+.kind.contradiction{background:var(--err-bg);color:var(--err)}
+.kind.st-fixed{background:#dff5e8;color:#0b6b3c} .kind.st-kept{background:var(--line);color:var(--muted)}
+.imptag{font-size:12px;color:var(--brand)}
+.transcript .ln.imp{border-left:3px solid var(--warn);padding-left:6px}
+.transcript .impd{font-size:12.5px;color:var(--warn);font-weight:700;margin:8px 0 2px;white-space:normal}
+.transcript .rv{outline:2px dashed var(--err);border-radius:4px}
+.chtable td:first-child{white-space:nowrap;font-size:12px;color:var(--muted)}
+.chtable tr.undone td{text-decoration:line-through;color:var(--muted)}
+.sreason{font-size:12px;color:var(--muted);margin-top:2px}
+@media (prefers-color-scheme:dark){.kind.st-fixed{background:#173a28;color:#7ee2a8}}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#222;color:#fff;padding:9px 16px;border-radius:9px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
+.toast.show{opacity:.95}
+[hidden]{display:none!important}
+@media (prefers-color-scheme:dark){.transcript ins{background:#1f5e33;color:#e6ffe9}.transcript del{background:#6a2626;color:#ffe6e6}}
+@media (max-width:600px){.adv .row,.subj .two{grid-template-columns:1fr}.hero h1{font-size:27px}.transcript{height:340px}
+  header.top{flex-wrap:wrap}.nav{margin-left:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><div class="logo">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/><path d="M19 11a7 7 0 0 1-14 0M12 18v3"/></svg>
+    </div>강의 전사</div>
+    <nav class="nav" id="nav"><a href="#" data-view="main" class="on">전사</a><a href="#manage" data-view="manage">과목 관리<span class="cnt" id="navCnt" hidden></span></a></nav>
+    <div id="modelBadge" class="badge loading"><span class="dot"></span><span id="modelText">모델 로딩 중…</span></div>
+  </header>
+
+  <div id="serverAlert" class="alert err" hidden>서버와 연결이 끊겼습니다. run.bat이 실행 중인지 확인하세요. (자동으로 다시 연결합니다)</div>
+  <div id="powerAlert" class="alert warn" hidden>🔌 전원 어댑터가 연결되어 있지 않습니다 (<span id="battPct"></span>). 긴 강의를 전사할 때는 <b>전원 연결을 권장</b>합니다.</div>
+  <div id="ffmpegAlert" class="alert err" hidden></div>
+  <div id="resumeAlert" class="alert warn" hidden></div>
+
+  <div id="viewManage" hidden>
+  <section class="card subj" id="subjCard">
+    <div class="tabs" id="subjTabs"></div>
+    <div id="subjBody"><div class="hint">과목 정보를 불러오는 중…</div></div>
+  </section>
+  </div>
+
+  <div id="viewMain">
+  <div id="suggAlert" class="alert note" hidden></div>
+  <section class="hero">
+    <h1>강의 전사</h1>
+    <p>① 녹음 올리기 → ② <code>/correct</code> 입력 → ③ 확인이 필요한 곳 몇 군데만 듣고 고치기. 나머지(전사·복원·용어집·교정 규칙)는 프로그램과 Claude가 처리합니다.</p>
+  </section>
+
+  <section class="drop" id="drop">
+    <div class="inner">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      <button class="pick" id="pickBtn">파일 선택</button>
+      <p>또는 파일을 여기로 끌어 놓으세요</p>
+      <div class="formats">mp3 · m4a · wav · mp4 · 기타 오디오/영상 · 파일명 &lt;과목&gt;_&lt;YYMMDD&gt;.m4a로 과목을 자동 인식 · 아래 "전사 준비 목록"에서 확인한 뒤 "전사하기"</div>
+    </div>
+    <input type="file" id="fileInput" multiple accept="audio/*,video/*,.m4a,.mp3,.wav,.mp4,.aac,.flac,.ogg,.webm,.mkv,.wma" hidden>
+  </section>
+
+  <section class="card" id="prepCard">
+    <h2>전사 준비 목록</h2>
+    <details id="finalsBox"><summary class="hint">기말고사 녹음본에서 고르기 (아직 처리하지 않은 녹음을 과목별로)</summary><div id="finalsList"><div class="hint">불러오는 중…</div></div></details>
+    <div id="prepList"></div>
+    <div class="pfoot" id="prepFoot" hidden>
+      <button class="btn primary" id="prepGo">전사하기</button><span class="hint" id="prepEst"></span>
+    </div>
+  </section>
+
+  <section class="card" id="queueCard" hidden>
+    <h2>대기열</h2>
+    <div id="queueList"></div>
+  </section>
+
+  <section class="card" id="lectCard">
+    <h2 id="lectTitle">강의</h2>
+    <div class="hint" id="lectHint">강의마다 다음 할 일 하나만 보여 줍니다: <b>/correct 복사</b> → Claude Code(VS Code)에 붙여 넣기 · <b>확인 필요</b> → 듣고 고치기 · <b>완료</b>.
+      /correct는 한 번에 하나씩, 작업마다 새 대화(/clear)에서 실행하면 Pro 사용량이 줄어듭니다.</div>
+    <div id="lectList"><div class="hint">불러오는 중…</div></div>
+  </section>
+
+  <section class="card" id="jobView" hidden>
+    <div class="jobhead">
+      <div><div class="jobname" id="jName"></div><div class="jobsub" id="jSub"></div></div>
+      <button class="btn danger" id="jCancel" hidden>취소</button>
+    </div>
+    <div class="bar" id="jBar"><div></div></div>
+    <div class="stats" id="jStats"></div>
+    <div class="notices" id="jNotices"></div>
+    <div id="jPrompt"></div>
+    <div class="work" id="jWork" hidden></div>
+    <div class="player" id="jPlayer" hidden><audio id="audio" controls preload="none"></audio>
+      <span class="hint">문장의 ▶로 그 시점부터 듣고, ✎로 직접 들은 내용을 입력합니다.</span></div>
+    <div class="tbox">
+      <div class="transcript" id="jLines"></div>
+      <button class="toBottom" id="toBottom" hidden>↓ 최신 줄로 (자동 스크롤 다시 켜기)</button>
+    </div>
+    <div class="actions" id="jActions">
+      <a class="btn" id="dlTxt">.txt 다운로드</a>
+      <a class="btn" id="dlSrt">.srt 다운로드</a>
+      <button class="btn" id="copyAll">전체 복사</button>
+      <span class="hint" id="savedAt"></span>
+    </div>
+    <div class="replace" id="jReplace">
+      <input type="text" id="rFind" placeholder="찾을 단어 (예: 포토 신세시스)">
+      <span>→</span>
+      <input type="text" id="rTo" placeholder="바꿀 단어 (예: photosynthesis)">
+      <button class="btn" id="rApply">이 결과에서 바꾸기</button>
+    </div>
+  </section>
+
+  <section class="card" id="historyCard">
+    <details id="historyBox"><summary><b>전체 전사 기록</b> <span class="hint">중간고사 샘플·과목 없이 전사한 것 포함, 기록에서 지우기</span></summary>
+      <div id="historyList"><div class="hint">아직 기록이 없습니다.</div></div></details>
+  </section>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="modal" id="slideModal" hidden><div class="mbox" id="slideBox"></div></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const ACTIVE = ["queued", "converting", "transcribing", "restoring"];
+const STATUS = {queued:"대기 중", converting:"오디오 변환 중", transcribing:"전사 중", restoring:"복원 중", done:"완료",
+                cancelled:"취소됨", error:"오류", interrupted:"중단됨"};
+const WSTATUS = {awaiting:"교정 대기", done:"교정 완료", superseded:"대체됨"};
+const wstCls = w => w==="done"?"done":w==="superseded"?"cancelled":"transcribing";
+const REASON = {repeat:"같은 말 반복", dup:"앞뒤 문장과 같음", prompt:"프롬프트·핫워드 누출", english:"영어로만 출력(번역 의심)",
+                compression:"압축률 과다", phrase:"알려진 환각 문구", gap:"간격(소리 있음)", sparse:"길이에 비해 글자가 적음"};
+const OUTCOME = {restored:["복원","done"], kept:["원래 문장 유지",""], dropped:["환각만 제거",""], missing:["청취 불가","error"]};
+const FLAG = {U:"Whisper 신뢰도 낮음", R:"재전사로 복원한 문장", M:"청취 불가 (재전사로도 복원 못 함)", H:"직접 듣고 입력한 문장"};
+let jobsById = {}, viewing = null, lines = [], autoScroll = true, viewLoading = false;
+let work = null, workMode = store_get("workMode")||"fixed", workOnlyChg = false, editing = null;  // 교정 결과 보기
+
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2200); }
+function esc(s){ return s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function hms(sec){ if(sec==null||!isFinite(sec)) return "–"; sec=Math.max(0,Math.round(sec));
+  const h=Math.floor(sec/3600), m=Math.floor(sec%3600/60), s=sec%60;
+  return h ? `${h}시간 ${m}분` : m ? `${m}분 ${String(s).padStart(2,"0")}초` : `${s}초`; }
+function clock(sec){ sec=Math.round(sec||0); const h=Math.floor(sec/3600), m=Math.floor(sec%3600/60), s=sec%60;
+  return (h?h+":"+String(m).padStart(2,"0"):String(m).padStart(2,"0"))+":"+String(s).padStart(2,"0"); }
+function when(ts){ const d=new Date(ts*1000); return d.toLocaleDateString("ko-KR",{month:"numeric",day:"numeric"})+" "+d.toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"}); }
+async function api(url, opt={}){
+  const r = await fetch(url, opt);
+  if(!r.ok){ let m=r.statusText; try{ m=(await r.json()).detail||m }catch{} throw new Error(m); }
+  return r.json();
+}
+function store_get(k){ try{return localStorage.getItem(k)}catch{return null} }
+const store = { get(k){ try{return localStorage.getItem(k)}catch{return null} }, set(k,v){ try{ v==null?localStorage.removeItem(k):localStorage.setItem(k,v) }catch{} } };
+
+/* ---------- 상태 표시 ---------- */
+function showModel(m){
+  const b=$("#modelBadge"); b.className="badge "+m.state;
+  $("#modelText").textContent = m.state==="loading" ? "모델 로딩 중…" :
+    m.state==="error" ? "모델 오류: "+(m.error||"") :
+    m.compute_type==="float16" ? "준비됨 · large-v3 · float16" : `준비됨 · large-v3 · ${m.compute_type} (메모리 절약)`;
+}
+function showSystem(s){
+  $("#powerAlert").hidden = s.on_ac;
+  $("#battPct").textContent = s.battery!=null ? `배터리 ${s.battery}%` : "배터리 사용 중";
+  const fa=$("#ffmpegAlert"); fa.hidden = s.ffmpeg;
+  if(!s.ffmpeg) fa.innerHTML = "⚠ " + esc(s.ffmpeg_help).replace(/`([^`]+)`/g,"<code>$1</code>") + "<br>(이미 16kHz 모노 16bit wav 파일은 ffmpeg 없이도 전사됩니다)";
+}
+
+/* ---------- 화면: 메인(전사) / 과목 관리 ---------- */
+function showView(){
+  const manage = location.hash.startsWith("#manage");
+  $("#viewMain").hidden = manage; $("#viewManage").hidden = !manage;
+  document.querySelectorAll("#nav [data-view]").forEach(a=>a.classList.toggle("on", (a.dataset.view==="manage")===manage));
+  if(manage && subjData) loadSubjects(false).catch(()=>{});
+}
+window.addEventListener("hashchange", showView);
+function openManage(subject, section){  // 메인 화면 알림 → 과목 관리의 그 과목·그 칸
+  if(subject && subjData?.subjects.some(s=>s.name===subject)){ curSubj=subject; store.set("subject", subject); }
+  if(section) subjOpen[section]=true;
+  if(subjData){ renderSubjTabs(); renderSubjBody(); }
+  location.hash = "#manage"; window.scrollTo(0,0);
+}
+// 사람 확인이 필요한 제안이 있을 때만 메인 화면에 작은 알림
+function renderSuggAlert(){
+  const el=$("#suggAlert"); if(!subjData) return;
+  const subs=subjData.subjects.filter(s=>s.status.pending_suggestions);
+  const n=subs.reduce((a,s)=>a+s.status.pending_suggestions,0);
+  $("#navCnt").hidden=!n; $("#navCnt").textContent=n;
+  el.hidden=!n;
+  if(n) el.innerHTML=`🔎 확인이 필요한 제안 <b>${n}개</b> (자동 승인하지 않은 교정 규칙·용어·표기 규칙): `
+    + subs.map(s=>`<a data-goto="${esc(s.name)}">${esc(s.name)} ${s.status.pending_suggestions}개</a>`).join(" · ");
+}
+$("#suggAlert").addEventListener("click", e => { const a=e.target.closest("[data-goto]"); if(a) openManage(a.dataset.goto, "sugg"); });
+
+/* ---------- 업로드 ---------- */
+const drop=$("#drop"), input=$("#fileInput");
+$("#pickBtn").onclick = e => { e.stopPropagation(); input.click(); };
+drop.onclick = () => input.click();
+input.onchange = () => { if(input.files.length) upload([...input.files]); input.value=""; };
+let dragDepth=0;
+window.addEventListener("dragenter", e => { if(e.dataTransfer?.types?.includes("Files")){ e.preventDefault(); dragDepth++; drop.classList.add("over"); } });
+window.addEventListener("dragleave", () => { if(--dragDepth<=0){ dragDepth=0; drop.classList.remove("over"); } });
+window.addEventListener("dragover", e => e.preventDefault());
+window.addEventListener("drop", e => { e.preventDefault(); dragDepth=0; drop.classList.remove("over");
+  const fs=[...(e.dataTransfer?.files||[])]; if(fs.length) upload(fs); });
+
+async function upload(files){  // 바로 전사하지 않고 "전사 준비 목록"에 넣음
+  const fd = new FormData();
+  files.forEach(f => fd.append("files", f, f.name));
+  toast(`${files.length}개 파일 올리는 중…`);
+  try{
+    const r = await api("/api/upload", {method:"POST", body:fd});
+    renderPrep(r); toast(`${r.added}개를 전사 준비 목록에 넣었습니다. 과목을 확인하고 "전사하기"를 누르세요`);
+    $("#prepCard").scrollIntoView({behavior:"smooth", block:"nearest"});
+  }catch(e){ toast("업로드 실패: "+e.message); }
+}
+
+/* ---------- 전사 준비 목록 (올린 파일 · 기말고사 녹음본) ---------- */
+const mb = n => (n/1048576).toFixed(n<10485760?1:0)+"MB";
+let prep = null;
+async function loadPrep(){ try{ renderPrep(await api("/api/prep")); }catch(e){} }
+function renderPrep(r){
+  prep = r;
+  const el=$("#prepList"), items=r.items;
+  if(!items.length){ el.innerHTML=`<div class="hint">파일을 올리거나 위 "기말고사 녹음본에서 고르기"로 녹음을 넣으면 여기서 과목·길이를 확인하고 전사합니다.</div>`; $("#prepFoot").hidden=true; return; }
+  const opt=(v,label,cur)=>`<option value="${esc(v)}" ${v===cur?"selected":""}>${esc(label)}</option>`;
+  el.innerHTML = items.map(x=>{
+    const cur=x.subject||"", need=!x.subject;
+    const sel=`<select data-psubj="${x.id}" class="${need?"need":""}">${opt("","과목 선택 필요",cur)}${r.subjects.map(n=>opt(n,n,cur)).join("")}${opt(r.no_subject,"과목 없이 (프롬프트 없이, 교정 작업 없음)",cur)}</select>`;
+    const auto = x.subject_auto ? (x.subject===x.subject_auto?"파일명으로 인식":`파일명으로는 ${esc(x.subject_auto)}`) : "파일명으로 과목을 알 수 없음";
+    const p=x.processed, w=[];
+    if(p?.state==="done") w.push("⚠ 이미 처리한 녹음입니다. 다시 전사하면 이전 작업은 대체됨 처리됩니다."+(p.work?` (작업 ${esc(p.work)})`:""));
+    if(p?.state==="active") w.push("⚠ 이 녹음은 이미 대기열에 있습니다.");
+    if(!x.exists) w.push("⚠ 파일이 없습니다 (옮겨졌거나 지워짐). ✕로 빼세요.");
+    const boot=x.needs_bootstrap, cmd=`/bootstrap-glossary ${x.subject}`;
+    if(boot) w.push(`⚠ ${esc(x.subject)} 용어집이 비어 있습니다. 용어집 없이 전사하면 오인식이 많습니다 — Claude Code에서 <code>${esc(cmd)}</code><button class="x" data-copy="${esc(cmd)}" title="복사">📋</button>을 먼저 실행하세요.
+      <button class="btn" data-pforce="${x.id}">그래도 전사</button>`);
+    else if(x.allow_empty_glossary && r.glossary?.[x.subject]===0) w.push(`용어집 없이 전사합니다 ([그래도 전사]를 눌렀음)`);
+    const off=need||!x.exists||boot;
+    return `<div class="prow"><input type="checkbox" data-pchk="${x.id}" ${x.checked&&!off?"checked":""} ${off?"disabled":""}>
+      <span class="name" title="${esc(x.path)}">${esc(x.filename)}</span><span class="src">${x.source==="finals"?"기말고사 녹음본":"올린 파일"}</span>
+      <button class="x" data-pdel="${x.id}" title="${x.source==="upload"?"목록에서 빼기 (올린 파일도 uploads/에서 삭제)":"목록에서 빼기 (원본 녹음은 그대로)"}">✕</button>
+      <div class="meta"><span>${mb(x.size)}</span><span>${x.duration!=null?"녹음 "+clock(x.duration):"길이 확인 불가 (ffprobe 없음)"}</span>${sel}<span>${auto}</span></div>
+      ${w.map(t=>`<div class="wrn">${t}</div>`).join("")}</div>`;
+  }).join("");
+  $("#prepFoot").hidden=false; prepFoot();
+}
+function prepPicked(){ return prep ? prep.items.filter(x=>x.checked && x.subject && x.exists && !x.needs_bootstrap) : []; }
+function prepFoot(){
+  const pick=prepPicked(), need=prep.items.filter(x=>x.checked && !x.subject).length;
+  const dur=pick.reduce((a,x)=>a+(x.duration||0),0), unknown=pick.some(x=>x.duration==null);
+  $("#prepGo").disabled=!pick.length;
+  $("#prepGo").textContent = pick.length ? `전사하기 (${pick.length}개)` : "전사하기";
+  $("#prepEst").textContent = pick.length ? `예상 약 ${hms(dur*prep.ratio)}${unknown?" 이상":""} (녹음 합계 ${clock(dur)} × 지난 전사 속도 ${prep.ratio}, 변환·복원 포함 대략치) · Whisper 프롬프트: 과목 프롬프트 빌더`
+    : need ? "과목을 고른 파일만 전사할 수 있습니다" : "전사할 파일을 체크하세요";
+}
+$("#prepList").addEventListener("change", async e => {
+  const s=e.target.closest("[data-psubj]"), c=e.target.closest("[data-pchk]");
+  try{
+    if(s) renderPrep(await api(`/api/prep/${s.dataset.psubj}`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({subject:s.value, checked:!!s.value})}));
+    if(c){ const x=prep.items.find(x=>x.id===c.dataset.pchk); x.checked=c.checked; prepFoot();
+      api(`/api/prep/${x.id}`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({checked:c.checked})}).catch(()=>{}); }
+  }catch(err){ toast(err.message); }
+});
+$("#prepList").addEventListener("click", async e => {
+  const cp=e.target.closest("[data-copy]");
+  if(cp){ try{ await navigator.clipboard.writeText(cp.dataset.copy); toast("복사했습니다: "+cp.dataset.copy); }catch{ toast("복사 실패"); } return; }
+  const f=e.target.closest("[data-pforce]");
+  if(f){ if(!confirm("용어집 없이 전사할까요? 오인식이 많아 /correct와 확인할 곳이 늘어납니다.")) return;
+    try{ renderPrep(await api(`/api/prep/${f.dataset.pforce}`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({allow_empty_glossary:true, checked:true})})); }catch(err){ toast(err.message); } return; }
+  const d=e.target.closest("[data-pdel]"); if(!d) return;
+  const x=prep.items.find(x=>x.id===d.dataset.pdel);
+  if(x.source==="upload" && !confirm(`${x.filename}을(를) 목록에서 빼고 올린 파일을 지울까요?`)) return;
+  try{ renderPrep(await api(`/api/prep/${x.id}`,{method:"DELETE"})); if($("#finalsBox").open) loadFinals(); }catch(err){ toast(err.message); }
+});
+$("#prepGo").onclick = async () => {
+  const pick=prepPicked(); if(!pick.length) return;
+  $("#prepGo").disabled=true;
+  try{
+    const r=await api("/api/prep/start",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({ids:pick.map(x=>x.id)})});
+    r.jobs.forEach(j=>jobsById[j.id]=j); renderPrep(r);
+    if(r.jobs.length && (!viewing || !ACTIVE.includes(jobsById[viewing]?.status))) openJob(r.jobs[0].id);
+    renderQueue(); loadHistory(); loadLectures(); if($("#finalsBox").open) loadFinals();
+    toast(r.jobs.length>1 ? `${r.jobs.length}개 파일을 대기열에 넣었습니다` : "전사를 시작합니다");
+  }catch(e){ toast(e.message); prepFoot(); }
+};
+// 기말고사_녹음본: 과목별 목록, 처리 안 한 녹음만 기본 체크 → 준비 목록으로
+const FSTATE = {new:"", prep:"준비 목록에 있음", active:"대기열에 있음", done:"처리됨"};
+async function loadFinals(){
+  const el=$("#finalsList");
+  try{
+    const r=await api("/api/finals");
+    if(!r.exists){ el.innerHTML=`<div class="hint">폴더가 없습니다: ${esc(r.folder)}</div>`; return; }
+    const row=x=>{ const st=x.state, k=x.lecture;
+      const label = st==="done" ? `처리됨${x.work_status?" · "+(WSTATUS[x.work_status]||x.work_status):""}` : FSTATE[st];
+      return `<label><input type="checkbox" data-final="${esc(x.file)}" ${st==="new"?"checked":""} ${st==="prep"||st==="active"?"disabled":""}>
+        <span>${esc(x.file)}</span>${k?.part?`<span class="part" title="같은 날 강의를 나눈 녹음 (별도 작업·별도 md, 뒷부분 교정 때 앞부분 마지막 문단을 참고)">${k.part}부</span>`:""}
+        <span class="hint">${mb(x.size)}${label?" · "+label:""}</span></label>`; };
+    const groups=r.subjects.filter(g=>g.recordings.length);
+    el.innerHTML = (groups.map(g=>{ const n=g.recordings.filter(x=>x.state==="new").length;
+        return `<div class="fgroup"><b>${esc(g.name)}</b> <span class="hint">처리 안 함 ${n} / ${g.recordings.length}</span>${g.recordings.map(row).join("")}</div>`; }).join("")
+      + (r.other.length?`<div class="fgroup"><b>과목을 알 수 없는 파일</b> <span class="hint">파일명이 &lt;과목&gt;_&lt;YYMMDD&gt;[_NN] 형식이 아님 (준비 목록에서 과목을 고름)</span>${r.other.map(row).join("")}</div>`:""))
+      || `<div class="hint">녹음이 없습니다: ${esc(r.folder)}</div>`;
+    el.insertAdjacentHTML("beforeend", `<div class="pfoot"><button class="btn" id="finalsAdd">선택한 녹음을 준비 목록에 넣기</button><span class="hint">처리됨 = 끝난 전사나 대체되지 않은 교정 작업이 있음. 원본 녹음은 읽기만 합니다.</span></div>`);
+  }catch(e){ el.innerHTML=`<div class="alert err">${esc(e.message)}</div>`; }
+}
+$("#finalsBox").addEventListener("toggle", e => { if(e.target.open) loadFinals(); });
+$("#finalsList").addEventListener("click", async e => {
+  if(e.target.id!=="finalsAdd") return;
+  const files=[...$("#finalsList").querySelectorAll("[data-final]:checked:not(:disabled)")].map(b=>b.dataset.final);
+  if(!files.length) return toast("녹음을 고르세요");
+  try{ const r=await api("/api/prep/finals",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({files})});
+    renderPrep(r); loadFinals(); toast(`${r.added}개를 전사 준비 목록에 넣었습니다`); }catch(err){ toast(err.message); }
+});
+
+/* ---------- 이어서 처리 (서버가 꺼져 끝나지 못한 작업) ---------- */
+function showResume(list){
+  const el=$("#resumeAlert");
+  if(!list?.length){ el.hidden=true; return; }
+  el.hidden=false;
+  el.innerHTML=`⏸ 서버가 꺼져(절전·종료) 끝나지 못한 전사 <b>${list.length}개</b>가 있습니다: ${list.map(j=>esc(j.filename)).join(", ")}<br>
+    이어서 처리할까요? (진행 중이던 파일은 처음부터 다시 전사합니다)
+    <div class="cmd"><button class="btn primary" data-resume="resume">이어서 처리</button><button class="btn" data-resume="discard">처리하지 않음 (녹음 복사본 삭제)</button></div>`;
+}
+$("#resumeAlert").addEventListener("click", async e => {
+  const b=e.target.closest("[data-resume]"); if(!b) return;
+  if(b.dataset.resume==="discard" && !confirm("남은 작업을 이어서 처리하지 않을까요? (원본이 기말고사_녹음본에 있으면 나중에 다시 고를 수 있습니다)")) return;
+  try{ const r=await api("/api/resume",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:b.dataset.resume})});
+    showResume([]); toast(r.resumed?`${r.resumed}개를 다시 대기열에 넣었습니다`:"이어서 처리하지 않습니다"); loadHistory(); }catch(err){ toast(err.message); }
+});
+
+/* ---------- 강의 목록: 강의마다 다음 할 일 하나 (/correct 복사 · 확인 필요 n곳 · 완료) ---------- */
+const NEXT_LABEL = {active:"전사 중", correct:"/correct 대기", review:"확인 필요", complete:"완료", error:"중단·오류", none:"교정 작업 없음"};
+let lectAll = false, lectData = null;
+async function loadLectures(){
+  try{ lectData=await api("/api/lectures"); }catch(e){ return; }
+  renderLectures();
+}
+function renderLectures(){
+  if(!lectData) return;
+  const r=lectData, el=$("#lectList"), items=r.items, c=r.counts;
+  $("#lectTitle").innerHTML = `강의 <span class="hint">${[c.active?`전사 중 ${c.active}`:"", c.review?`확인 필요 ${c.review}`:"", c.correct?`/correct 대기 ${c.correct}`:"", c.complete?`완료 ${c.complete}`:""].filter(Boolean).join(" · ")}</span>`;
+  if(!items.length){ el.innerHTML=`<div class="hint">아직 전사한 강의가 없습니다. 위에서 녹음을 올리세요.</div>`; return; }
+  const todo=items.filter(x=>!["complete","none"].includes(x.next)), done=items.filter(x=>["complete","none"].includes(x.next));
+  const shown = lectAll ? items : todo.concat(done.slice(0, Math.max(3, 8-todo.length)));
+  el.innerHTML = shown.map(lectRow).join("")
+    + (shown.length<items.length?`<div class="lmore"><button class="btn" id="lectMore">완료한 강의 ${items.length-shown.length}개 더 보기</button></div>`:"")
+    + (lectAll && done.length>3?`<div class="lmore"><button class="btn" id="lectLess">접기</button></div>`:"");
+}
+function lectRow(x){
+  const k=x.lecture, j=x.job?jobsById[x.job]:null;
+  const part = k?.part?`<span class="part">${k.part}부</span>`:"";
+  let act="", note="";
+  if(x.next==="active"){ const st=j?.status||x.status; act=`<span class="st ${st}">${STATUS[st]||st}${st==="transcribing"&&j?" "+Math.floor((j.progress||0)*100)+"%":""}${st==="restoring"&&j?.restore?.total?` ${j.restore.done}/${j.restore.total}`:""}</span>`; }
+  else if(x.next==="correct"){ act=`<button class="btn primary" data-copy="${esc(x.command)}" title="복사해서 VS Code의 Claude Code에 붙여 넣기 (새 대화 권장)">${esc(x.command)} 복사</button>`;
+    if(x.prev_part?.status==="awaiting") note=`앞부분 ${esc(x.prev_part.name)}을(를) 먼저 교정하면 이 작업의 context.md에 앞부분 마지막 문단이 들어갑니다.`; }
+  else if(x.next==="review"){ const n=x.review?.open||0; act=`<button class="btn review" data-open="${esc(x.name)}" data-job="${esc(x.job||"")}" data-review="1">${n?`확인 필요 ${n}곳`:"확인 끝내기"}</button>`; }
+  else if(x.next==="complete") act=`<span class="done" data-open="${esc(x.name)}" data-job="${esc(x.job||"")}" title="결과 보기">✓ 완료</span>`;
+  else if(x.next==="error") act=`<span class="st ${x.status}">${STATUS[x.status]||x.status}</span>`;
+  else act=`<span class="hint">${esc(NEXT_LABEL[x.next]||"")}</span>`;
+  const cm=x.carried_manual;
+  if(cm?.unmatched?.length) note+=`${note?" ":""}⚠ 이전 작업에서 직접 입력한 문장 ${cm.unmatched.length}개를 새 전사에 옮기지 못했습니다 (결과 화면에서 확인).`;
+  const open = x.kind==="work" ? `data-open="${esc(x.name)}" data-job="${esc(x.job||"")}"` : `data-job="${esc(x.job||"")}"`;
+  return `<div class="lrow"><span class="name" ${open} title="${esc(x.file||"")}">${esc(x.name)}</span>${part}
+    <span class="sub">${esc(x.subject||"과목 없음")}${x.duration?" · "+clock(x.duration):""}${x.transcribed?" · 전사 "+esc(x.transcribed.slice(5,16).replace("T"," ")):""}</span>
+    <span class="act">${act}</span>${note?`<div class="note">${note}</div>`:""}</div>`;
+}
+$("#lectList").addEventListener("click", async e => {
+  if(e.target.id==="lectMore"){ lectAll=true; return renderLectures(); }
+  if(e.target.id==="lectLess"){ lectAll=false; return renderLectures(); }
+  const c=e.target.closest("[data-copy]");
+  if(c){ try{ await navigator.clipboard.writeText(c.dataset.copy); toast("복사했습니다: "+c.dataset.copy+" — Claude Code 새 대화에 붙여 넣으세요"); }catch{ toast("복사 실패"); } return; }
+  const o=e.target.closest("[data-open],[data-job]"); if(!o) return;
+  if(o.dataset.job && jobsById[o.dataset.job]) await openJob(o.dataset.job);
+  else if(o.dataset.open) await openWorkOnly(o.dataset.open);
+  else return;
+  const target = o.dataset.review ? $("#reviewBox") : $("#jobView");
+  (target||$("#jobView")).scrollIntoView({behavior:"smooth", block:"start"});
+});
+
+/* ---------- 대기열 / 기록 ---------- */
+function renderQueue(){
+  const act = Object.values(jobsById).filter(j=>ACTIVE.includes(j.status)).sort((a,b)=>a.created-b.created);
+  $("#queueCard").hidden = act.length < 2 && !(act.length===1 && act[0].id!==viewing);
+  $("#queueList").innerHTML = act.map(j=>`<div class="qitem" data-id="${j.id}"><span class="st ${j.status}">${STATUS[j.status]}${j.status==="transcribing"?" "+Math.floor(j.progress*100)+"%":""}</span>
+    <span class="name">${esc(j.filename)}</span>${j.status==="queued"?`<button class="x" title="대기 취소" data-cancel="${j.id}">✕</button>`:""}</div>`).join("");
+}
+$("#queueList").onclick = e => {
+  const c=e.target.closest("[data-cancel]"); if(c){ e.stopPropagation(); cancelJob(c.dataset.cancel); return; }
+  const it=e.target.closest(".qitem"); if(it) openJob(it.dataset.id);
+};
+function lectureOf(fn){  // 나뉜 녹음 <과목>_<YYMMDD>_NN → {key, part} (같은 날 강의의 앞뒤 부분)
+  const m=String(fn).split(/[\\/]/).pop().split(".")[0].match(/^(.+?)_(\d{6})_(\d{1,2})$/);
+  return m ? {key:m[1]+"_"+m[2], part:+m[3]} : null;
+}
+async function loadHistory(){
+  const r = await api("/api/jobs");
+  r.jobs.forEach(j => jobsById[j.id] = j);
+  const el=$("#historyList");
+  const item = j => `<div class="hitem ${j.id===viewing?"sel":""}" data-id="${j.id}">
+      <span class="st ${j.status}">${STATUS[j.status]||j.status}</span>${j.work_status?`<span class="st ${wstCls(j.work_status)}">${WSTATUS[j.work_status]||j.work_status}</span>`:""}<span class="name" title="${esc(j.txt_name)}">${esc(j.filename)}</span>
+      <span class="meta">${j.duration?clock(j.duration)+" · ":""}${when(j.created)}</span>
+      ${ACTIVE.includes(j.status)?"":`<button class="x" title="기록에서 지우기 (파일은 outputs 폴더에 남음)" data-del="${j.id}">✕</button>`}</div>`;
+  const placed=new Set(), out=[];
+  for(const j of r.jobs){  // 같은 강의의 나뉜 녹음은 가장 최근 것 자리에 묶어서 (부분 순서대로)
+    const k=lectureOf(j.filename);
+    if(!k || j.options?.sample){ out.push(item(j)); continue; }
+    if(placed.has(k.key)) continue;
+    placed.add(k.key);
+    const mem=r.jobs.filter(x=>!x.options?.sample && lectureOf(x.filename)?.key===k.key).sort((a,b)=>lectureOf(a.filename).part-lectureOf(b.filename).part || b.created-a.created);
+    const parts=new Set(mem.map(x=>lectureOf(x.filename).part));
+    out.push(`<div class="lgroup"><div class="lhead">${esc(k.key)} · 같은 날 강의를 나눈 녹음 ${parts.size}개 (작업·md는 따로)</div>${mem.map(item).join("")}</div>`);
+  }
+  el.innerHTML = out.length ? out.join("") : `<div class="hint">아직 기록이 없습니다.</div>`;
+}
+$("#historyList").onclick = async e => {
+  const d=e.target.closest("[data-del]");
+  if(d){ e.stopPropagation(); if(!confirm("이 기록을 목록에서 지울까요? (outputs 폴더의 txt·srt 파일은 남습니다)")) return;
+    await api("/api/jobs/"+d.dataset.del,{method:"DELETE"}); delete jobsById[d.dataset.del];
+    if(viewing===d.dataset.del) closeJob(); loadHistory(); return; }
+  const it=e.target.closest(".hitem"); if(it) openJob(it.dataset.id);
+};
+
+/* ---------- 작업 보기 ---------- */
+const box=$("#jLines");
+function lineHtml(l){ const m=l.match(/^(\[[\d:]+\])\s?(.*)$/s); return `<div class="ln">${m?`<span class="ts">${m[1]}</span>${esc(m[2])}`:esc(l)}</div>`; }
+function renderLines(){
+  if(work && !ACTIVE.includes(jobsById[viewing]?.status)) return renderWorkLines();
+  box.innerHTML = lines.length ? lines.map(lineHtml).join("") : `<div class="empty">${ACTIVE.includes(jobsById[viewing]?.status)?"첫 문장을 기다리는 중… (변환·첫 구간 처리에 잠시 걸립니다)":"결과가 없습니다."}</div>`;
+  if(autoScroll) box.scrollTop = box.scrollHeight;
+}
+function appendLine(l){
+  if(!lines.length) box.innerHTML="";
+  lines.push(l); box.insertAdjacentHTML("beforeend", lineHtml(l));
+  if(autoScroll) box.scrollTop = box.scrollHeight;
+}
+box.addEventListener("scroll", () => {
+  autoScroll = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
+  $("#toBottom").hidden = autoScroll || !ACTIVE.includes(jobsById[viewing]?.status);
+});
+$("#toBottom").onclick = () => { autoScroll=true; box.scrollTop=box.scrollHeight; $("#toBottom").hidden=true; };
+
+async function openJob(id, keepScroll=false){
+  if(String(id).startsWith("w:")) return openWorkOnly(id.slice(2), keepScroll);
+  if(!keepScroll || viewing!==id){ autoScroll=true; editing=null; rEditing=null; }
+  viewing=id; store.set("viewing", id); viewLoading=true;
+  $("#jobView").hidden=false; drop.classList.add("compact");
+  try{
+    const r = await api("/api/jobs/"+id);
+    if(viewing!==id) return;
+    jobsById[id]=r.job; lines=r.lines;
+    if(work?.state.name!==r.job.work) work=null;
+    if(r.job.work) await loadWork(r.job.work, false);
+    if(viewing!==id) return;
+    renderJob(); renderLines(); renderQueue();
+    document.querySelectorAll(".hitem").forEach(h=>h.classList.toggle("sel", h.dataset.id===id));
+  }catch(e){ closeJob(); }
+  finally{ viewLoading=false; }
+}
+async function openWorkOnly(name, keepScroll=false){  // 전사 기록을 지운 교정 작업: 작업 폴더만으로 결과·확인 화면
+  const id="w:"+name;
+  if(!keepScroll || viewing!==id){ autoScroll=true; editing=null; rEditing=null; }
+  try{
+    const r=await api("/api/work/"+encodeURIComponent(name));
+    jobsById[id]={id, filename:r.job.source_file, status:"done", segments:r.job.segments, duration:r.job.duration, work:name,
+      work_status:r.job.status, options:{...(r.job.whisper||{}), subject:r.job.subject}, notices:[], workOnly:true, txt_name:""};
+    viewing=id; store.set("viewing", id); lines=[]; work=r;
+    $("#jobView").hidden=false; drop.classList.add("compact");
+    renderJob(); renderLines(); renderQueue();
+  }catch(e){ toast(e.message); }
+}
+function closeJob(){ viewing=null; store.set("viewing",null); $("#jobView").hidden=true; drop.classList.remove("compact"); $("#audio").pause(); }
+
+function renderJob(){
+  const j=jobsById[viewing]; if(!j) return;
+  const active=ACTIVE.includes(j.status);
+  $("#jName").textContent=j.filename;
+  let sub = STATUS[j.status]||j.status;
+  if(j.cancelling) sub="취소하는 중… (현재 문장까지 저장)";
+  if(j.status==="transcribing" && j.compute_type) sub += ` · ${j.compute_type}`;
+  if(j.status==="restoring") sub += j.restore?.total!=null ? ` — 환각·누락 의심 구간 재전사 ${j.restore.done}/${j.restore.total}` : " — 환각·누락 의심 구간 찾는 중…";
+  if(j.status==="error") sub += " — "+(j.error||"");
+  if(j.status==="interrupted") sub += " — 서버가 꺼져서 중단됐습니다. 그때까지의 결과는 저장되어 있습니다.";
+  if(j.status==="cancelled") sub += " — 그때까지의 결과는 저장되어 있습니다.";
+  $("#jSub").textContent=sub;
+  $("#jCancel").hidden = !active || j.cancelling;
+  const rp = j.status==="restoring" ? (j.restore?.total ? j.restore.done/j.restore.total : null) : undefined;
+  const bar=$("#jBar"); bar.classList.toggle("indet", j.status==="converting" || (j.status==="transcribing" && !j.progress) || rp===null);
+  bar.firstElementChild.style.width = (j.status==="done"?100:rp!=null?rp*100:j.progress*100)+"%";
+  renderStats();
+  $("#jNotices").innerHTML = (j.notices||[]).map(n=>`<div class="alert warn">ℹ ${esc(n)}</div>`).join("") +
+    (j.status==="error"?`<div class="alert err">${esc(j.error||"알 수 없는 오류")}</div>`:"");
+  renderPromptInfo(j);
+  setAudio(j);
+  $("#jActions").hidden = (!lines.length && active) || !!j.workOnly;
+  $("#jReplace").hidden = active || !!work?.state.has_result || !!j.workOnly;
+  renderWorkPanel();
+  $("#dlTxt").href=`/api/jobs/${j.id}/download?fmt=txt`; $("#dlSrt").href=`/api/jobs/${j.id}/download?fmt=srt`;
+  $("#savedAt").textContent = j.txt_name ? `저장 위치: outputs\\${j.txt_name}` : "";
+  if(!active) $("#toBottom").hidden=true;
+}
+function renderStats(){
+  const j=jobsById[viewing]; if(!j) return;
+  const active=ACTIVE.includes(j.status), out=[];
+  if(j.status==="transcribing") out.push(`진행 <b>${(j.progress*100).toFixed(1)}%</b>`);
+  if(j.started){ const end = active ? Date.now()/1000 : (j.finished||j.started); out.push(`경과 <b>${hms(end-j.started)}</b>`); }
+  if(j.status==="transcribing") out.push(`남은 시간 <b>${j.eta!=null?"약 "+hms(j.eta):"계산 중…"}</b>`);
+  if(j.duration) out.push(`오디오 길이 <b>${clock(j.duration)}</b>`);
+  out.push(`문장 <b>${j.segments||lines.length}</b>개`);
+  const rs=j.restore;
+  if(rs && rs.regions!=null) out.push(`복원 <b>${rs.restored}</b> · 청취 불가 <b>${rs.missing}</b>곳 (${Math.round(rs.missing_seconds)}초)`);
+  if(j.status==="queued") out.unshift("앞선 작업이 끝나면 시작합니다");
+  $("#jStats").innerHTML=out.map(s=>`<span>${s}</span>`).join("");
+}
+function renderPromptInfo(j){  // 실제로 Whisper에 넣은 프롬프트 (과목 프롬프트 빌더면 토큰 수와 잘린 항목도)
+  const o=j.options||{}, info=o.prompt_info, el=$("#jPrompt");
+  if(!o.prompt && !o.hotwords){ el.innerHTML=""; return; }
+  const src = o.prompt_source==="builder" && info ? `과목 프롬프트 빌더 · ${esc(o.subject||"")} · ${info.tokens.total}/${info.tokens.limit}토큰${info.tokens.measured?"":" (어림)"}`
+    : o.prompt_source==="manual" ? `수동 지정 (과목 관리 → 고급) · ${esc(o.subject||"")}` : `이전 버전 프리셋 ${esc(o.preset||"")}`;
+  const open = el.querySelector("details")?.open ? "open" : "";
+  el.innerHTML = `<details ${open}><summary class="hint">Whisper 프롬프트 — ${src}</summary><div class="pbox">
+    <div>initial_prompt</div><code>${esc(o.prompt||"(없음)")}</code><div>hotwords</div><code>${esc(o.hotwords||"(없음)")}</code>
+    ${info?.cut?.length?`<div class="hint">토큰 한도 때문에 뺀 항목 ${info.cut.length}개: ${esc(info.cut.join(", "))}</div>`:""}</div></details>`;
+}
+function setAudio(j){  // 녹음이 보관된 작업이면 플레이어 표시 (교정 작업이 있으면 그 녹음)
+  const el=$("#audio"), active=ACTIVE.includes(j.status);
+  const src = active ? "" : work?.state.audio ? `/api/work/${encodeURIComponent(work.state.name)}/audio` : j.audio ? `/api/jobs/${j.id}/audio` : "";
+  $("#jPlayer").hidden = !src;
+  if(src && el.dataset.src!==src){ el.dataset.src=src; el.src=src; }
+  if(!src && el.dataset.src){ el.pause(); el.removeAttribute("src"); el.dataset.src=""; el.load(); }
+}
+function playAt(sec){
+  const el=$("#audio"); if($("#jPlayer").hidden) return toast("이 작업에는 보관된 녹음이 없습니다");
+  const go=()=>{ el.currentTime=Math.max(0,sec-1.5); el.play().catch(()=>{}); };
+  if(el.readyState>=1) go(); else { el.addEventListener("loadedmetadata", go, {once:true}); el.load(); }
+}
+setInterval(()=>{ if(viewing && ACTIVE.includes(jobsById[viewing]?.status)) renderStats(); }, 1000);
+
+async function cancelJob(id){
+  if(!confirm("전사를 취소할까요? 지금까지의 결과는 저장됩니다.")) return;
+  try{ jobsById[id]=await api(`/api/jobs/${id}/cancel`,{method:"POST"}); if(id===viewing) renderJob(); renderQueue(); }catch(e){ toast(e.message); }
+}
+$("#jCancel").onclick = () => cancelJob(viewing);
+$("#copyAll").onclick = async () => { try{ await navigator.clipboard.writeText(lines.join("\n")); toast("전체 결과를 복사했습니다"); }catch{ toast("복사 실패"); } };
+
+$("#rApply").onclick = async () => {
+  const find=$("#rFind").value, to=$("#rTo").value; if(!find) return toast("찾을 단어를 입력하세요");
+  try{ const r=await api(`/api/jobs/${viewing}/replace`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({find,replace:to})});
+    lines=r.lines; renderLines(); toast(r.count?`${r.count}곳을 바꿨습니다 (txt·srt에도 반영)`:"찾는 단어가 없습니다"); }catch(e){ toast(e.message); }
+};
+/* ---------- 교정 결과 ---------- */
+async function loadWork(name, render=true){
+  try{
+    const r = await api("/api/work/"+encodeURIComponent(name));
+    if(jobsById[viewing]?.work!==name) return;
+    work = r;
+  }catch(e){ work = null; }
+  if(render){ renderJob(); renderLines(); }
+}
+function renderWorkPanel(){
+  const j=jobsById[viewing], el=$("#jWork");
+  if(!j || ACTIVE.includes(j.status) || !j.segments){ el.hidden=true; return; }
+  el.hidden=false;
+  if(!work){
+    const names=subjData?subjData.subjects.map(s=>s.name):[], guess=names.find(n=>j.filename.startsWith(n+"_"))||"";
+    el.innerHTML=`<div class="whead"><b>교정</b><span class="hint">교정 작업 폴더를 만들면 Claude Code(/correct)로 교정하고 과목 폴더에 md로 저장합니다.</span></div>
+      <div class="cmd"><select id="wSubj">${guess?"":`<option value="">과목 선택</option>`}${names.map(n=>`<option ${n===guess?"selected":""}>${esc(n)}</option>`).join("")}</select>
+      <button class="btn primary" id="wCreate">교정 작업 만들기</button></div>`;
+    $("#wCreate").onclick = async () => {
+      const subject=$("#wSubj").value; if(!subject) return toast("과목을 고르세요");
+      try{ const st=await api(`/api/jobs/${j.id}/work`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({subject})});
+        j.work=st.name; j.work_status=st.status; await loadWork(st.name); loadHistory(); toast("교정 대기: "+st.command); }catch(e){ toast(e.message); }
+    };
+    return;
+  }
+  const st=work.state, res=work.result, c=st.comprehension||{}, s=st.stats||{};
+  let h=`<div class="whead"><span class="st ${wstCls(st.status)}">${esc(st.status_text)}</span><b>${esc(st.name)}</b><span class="hint">${esc(work.job.subject)}</span></div>`;
+  if(st.status==="superseded") h+=`<div class="alert warn">같은 녹음을 다시 전사해서 <b>${esc(st.superseded_by||"")}</b>(으)로 대체된 작업입니다. 읽기 전용이며 과목 폴더의 md는 새 작업이 씁니다 (작업 폴더는 남겨 둠).</div>`;
+  if(st.status==="awaiting") h+=`<div class="cmd">VS Code의 Claude Code에 입력 <code>${esc(st.command)}</code><button class="x" title="복사" data-copy="${esc(st.command)}">📋</button></div>`;
+  if(st.edits_pending) h+=`<div class="alert warn">${esc(st.edits.join(", "))} 감지됨 — Claude Code가 apply_edits.py를 실행해 검증을 통과하면 결과가 여기에 표시됩니다.</div>`;
+  if(work.review?.total) h+=reviewHtml();
+  else if(st.has_result && st.status==="done") h+=`<div class="hint">✓ 확인 목록 없음 — 중요 구간에 들어 봐야 할 곳이 없어 교정이 끝났습니다.${(work.result.important||[]).length?` (중요 구간 ${work.result.important.length}곳은 본문에 ★로 표시)`:""}</div>`;
+  const cm=st.carried_manual;
+  if(cm?.moved?.length || cm?.unmatched?.length) h+=`<details data-k="carry" ${workOpen.carry||cm.unmatched?.length?"open":""}><summary class="hint">이전 작업(${esc((cm.from||[]).join(", "))})에서 직접 입력한 문장: 새 전사로 옮김 ${cm.moved?.length||0}개${cm.unmatched?.length?` · <b>위치를 못 찾음 ${cm.unmatched.length}개</b>`:""}</summary>
+    <div class="rlist">${(cm.unmatched||[]).map(x=>`<div class="r"><button class="x" data-play="${x.start}" title="여기부터 듣기">▶</button><span>${clock(Math.floor(x.start))}</span><span>${esc(x.text)}</span><button class="x" data-copy="${esc(x.text)}" title="문장 복사 (그 자리 ✎에 붙여 넣기)">📋</button></div>`).join("")}
+      ${(cm.moved||[]).map(x=>`<div class="r hint"><button class="x" data-go="${x.i}" title="그 문장으로">↪</button><span>${clock(Math.floor(x.start))}</span><span>${esc(x.text)}</span></div>`).join("")}</div></details>`;
+  const rs=st.restore, regs=work.restore_regions||[];
+  if(rs && rs.regions!=null) h+=`<details data-k="regs" ${workOpen.regs?"open":""}><summary class="hint">자동 감지: 환각 의심 ${rs.hallucinated}문장 · 누락 의심 ${rs.gaps+rs.sparse}곳 → 재전사 ${rs.regions}곳:
+      복원 ${rs.restored} · 원래 문장 유지 ${rs.kept} · 환각만 제거 ${rs.dropped} · 청취 불가 ${rs.missing}곳 (${Math.round(rs.missing_seconds)}초)</summary>
+    <div class="rlist">${regs.map(regionHtml).join("")||`<div class="hint">의심 구간이 없습니다.</div>`}</div></details>`;
+  if(st.has_result){
+    h+=`<div class="chips"><span class="chip">교정 <b>${s.edits??0}</b>문장</span>${s.reverted?`<span class="chip">되돌림 <b>${(res.reverted||[]).length}</b></span>`:""}
+      <span class="chip">문단 <b>${s.paragraphs??0}</b> · 슬라이드 위치 <b>${s.located??0}</b></span>
+      ${s.restored?`<span class="chip">복원 <b>${s.restored}</b>곳</span>`:""}
+      ${s.inaudible?`<span class="chip">청취 불가 <b>${s.inaudible}</b>곳${s.inaudible_seconds!=null?` (${s.inaudible_seconds}초)`:""}${s.inaudible_correct?` · 교정 중 표시 ${s.inaudible_correct}`:""}</span>`:""}${c.score!=null?`<span class="chip">이해도 <b>${c.score}</b>/100</span>`:""}</div>`;
+    if(st.md_path && st.status!=="superseded") h+=`<div class="hint">저장 위치: ${esc(st.md_path)}</div>`;
+    if((c.need_notebooklm || st.notebooklm) && st.status!=="superseded"){
+      const cmd = st.notebooklm ? st.crosscheck_command : work.notebooklm_existing ? `/crosscheck ${st.name} "${work.notebooklm_existing}"` : st.crosscheck_command;
+      h+=`<div class="alert warn">${st.notebooklm?"NotebookLM 전사본을 올렸습니다. 아래 명령으로 약한 구간만 대조하세요.":"NotebookLM 전사본을 올려 주세요"}${c.reason?` — ${esc(c.reason)}`:""}${(c.weak_ranges||[]).filter(w=>w.kind!=="board").length?`<br>약한 구간: ${c.weak_ranges.filter(w=>w.kind!=="board").map(w=>`${w.from}–${w.to}${w.why?` (${esc(w.why)})`:""}`).join(", ")}`:""}
+        <div class="cmd"><label class="btn">NotebookLM md 올리기<input type="file" id="nbFile" accept=".md,.txt,text/markdown,text/plain" hidden></label>
+          ${work.notebooklm_existing&&!st.notebooklm?`<span class="hint">같은 녹음의 중간고사 NotebookLM 전사본이 있어 올리지 않아도 됩니다</span>`:""}</div>
+        <div class="cmd"><code>${esc(cmd)}</code><button class="x" title="복사" data-copy="${esc(cmd)}">📋</button></div></div>`; }
+    h+=`<div class="cmd"><span class="seg"><button data-mode="fixed" class="${workMode==="fixed"?"on":""}">교정본</button><button data-mode="orig" class="${workMode==="orig"?"on":""}">원본</button></span>
+      <label class="hint"><input type="checkbox" id="wOnly" ${workOnlyChg?"checked":""}> 바뀐 문장만</label>
+      ${st.status==="superseded"?"":`<span class="hint">문장의 ↺ 버튼으로 원본으로 되돌리면 과목 폴더의 md도 바로 다시 저장됩니다.</span>`}</div>`;
+  }
+  const man=work.manual||{}, unc=res.segments.filter(x=>x.flag==="U"||x.flag==="M"||x.flag==="R"||man[x.i]);
+  if(unc.length) h+=`<details data-k="unc" ${workOpen.unc?"open":""}><summary class="hint">불확실·복원·청취 불가 ${unc.length}곳 (클릭하면 그 문장으로 이동해 재생, ✎로 직접 입력)</summary><div class="ulist">${unc.map(x=>`<button data-go="${x.i}" data-t="${x.start}" title="${esc(FLAG[man[x.i]?"H":x.flag]||"")}">${man[x.i]?"H":x.flag} ${clock(Math.floor(x.start))}</button>`).join("")}</div></details>`;
+  el.innerHTML=h;
+}
+const workOpen={};
+/* ---------- 확인 목록 (/correct가 만든 중요 구간의 확인할 곳 + 모순 의심) ---------- */
+const RKIND={contradiction:"모순 의심", recognition:"인식 실패", uncertain:"불확실", inaudible:"청취 불가"};
+const RSTATUS={open:"확인 안 함", fixed:"고침", kept:"그대로 둠"};
+const IKIND={exam:"시험", quiz:"퀴즈", assignment:"과제", emphasis:"강조"};
+let rEditing=null;
+function finalText(s){
+  const man=work.manual?.[s.i]; if(man) return man.text;
+  if(s.flag==="M") return "";
+  return s.text!=null && !(work.result.reverted||[]).includes(s.i) ? s.text : s.orig;
+}
+function reviewHtml(){
+  const rv=work.review, imp=work.result.important||[], by={}, ro=work.state.status==="superseded";
+  work.result.segments.forEach(s=>by[s.i]=s);
+  let h=`<div class="review" id="reviewBox"><div class="rhead"><b>확인 목록</b><span class="hint">남은 ${rv.open}곳 / 전체 ${rv.total}곳 · 중요 구간 ${imp.length}곳</span><span style="flex:1"></span>
+    ${ro?"":rv.completed?`<span class="kind st-fixed">완료 ${esc(rv.completed.slice(5,16).replace("T"," "))}</span><button class="btn" data-rcomplete="0">완료 취소</button>`:`<button class="btn primary" data-rcomplete="1">완료</button>`}</div>
+    <div class="hint">▶로 듣고 → 후보를 누르거나 ✎로 고치기 → 들어 보니 맞으면 "그대로 둠". 다 봤으면 [완료]. 고친 문장은 직접 입력(H)으로 과목 폴더의 md에 바로 반영됩니다.</div>`;
+  for(const x of rv.items){
+    const s=by[x.i], t=finalText(s), p=x.important!=null?imp[x.important]:null, cur=(x.candidates||[]).find(c=>t.includes(c));
+    h+=`<div class="ritem ${x.status!=="open"?"done":""}">
+      <div class="rtop"><button class="x" data-play="${x.start}" title="여기부터 듣기">▶</button><span class="ts">${clock(Math.floor(x.start))}</span>
+        <span class="kind ${x.kind}">${RKIND[x.kind]||x.kind}</span><span class="kind st-${x.status}">${RSTATUS[x.status]}</span>
+        ${p?`<span class="imptag">★ ${IKIND[p.kind]||""} — ${esc(p.summary)}</span>`:""}<button class="x" data-go="${x.i}" title="본문에서 이 문장으로">↪</button></div>
+      <div class="rtext">${s.flag==="M"&&!work.manual?.[x.i]?`<span class="miss">[청취 불가 ${clock(Math.floor(s.start))}–${clock(Math.ceil(s.end))}]</span>`:esc(t)}</div>
+      ${x.why?`<div class="hint">${esc(x.why)}</div>`:""}`;
+    if(!ro && rEditing===x.i) h+=`<div class="ract"><input type="text" id="rText" value="${esc(t)}" placeholder="들은 내용을 입력 (비우고 저장하면 직접 입력을 지움)"><button class="btn primary" data-rsave="${x.i}">저장</button><button class="btn" data-rcancel>취소</button></div>`;
+    else if(!ro) h+=`<div class="ract">${(x.candidates||[]).length?`<span class="hint">후보:</span>`+x.candidates.map(c=>`<button class="btn" data-cand="${esc(c)}" data-rid="${esc(x.id)}" data-i="${x.i}" title="${c===cur?"지금 문장 그대로 (그대로 둠)":"이 낱말로 바꿔 저장"}">${esc(c)}${c===cur?" (지금)":""}</button>`).join(""):""}
+      <button class="btn" data-redit="${x.i}">✎ 수정</button>${x.status==="open"?`<button class="btn" data-rkeep="${esc(x.id)}">그대로 둠</button>`:x.status==="kept"?`<button class="btn" data-rreopen="${esc(x.id)}">다시 확인</button>`:""}</div>`;
+    h+=`</div>`;
+  }
+  return h+`</div>`;
+}
+async function reviewPost(body, msg){
+  try{ await api(`/api/work/${encodeURIComponent(work.state.name)}/review`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    await loadWork(work.state.name); loadLectures(); if(msg) toast(msg); }catch(err){ toast(err.message); }
+}
+async function reviewSave(i, text){
+  try{ await api(`/api/work/${encodeURIComponent(work.state.name)}/manual`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({i, text})});
+    rEditing=null; await loadWork(work.state.name); loadLectures(); toast(text.trim()?"고쳐서 저장했습니다 (md 다시 저장)":"직접 입력을 지웠습니다"); }catch(err){ toast(err.message); }
+}
+function regionHtml(r){
+  const [label, cls]=OUTCOME[r.outcome]||[r.outcome||"?",""];
+  const tries=(r.tries||[]).map(t=>`${t.attempt==="plain"?"프롬프트 없이":"강의 프롬프트로"}: ${t.ok?(t.empty?"빈 결과":"통과"):"실패("+t.why.map(x=>REASON[x]||x).join(", ")+")"}${t.text?` "${t.text}"`:""}`).join("\n");
+  return `<div class="r" title="${esc(tries)}"><button class="x" data-play="${r.start}" title="여기부터 듣기">▶</button><span class="st ${cls}">${label}</span>
+    <span>${clock(Math.floor(r.start))}–${clock(Math.ceil(r.end))}</span><span class="hint">${esc(r.reasons.map(x=>REASON[x]||x).join(", "))}${r.attempt?` · ${r.attempt==="plain"?"프롬프트 없이":"강의 프롬프트로"} 재전사`:""}</span></div>`;
+}
+function diffHtml(a, b, mode){  // 단어 단위 비교: mode "ins"면 b에서 새로 생긴 부분, "del"이면 a에서 사라진 부분 강조
+  const A=a.split(/(\s+)/), B=b.split(/(\s+)/), n=A.length, m=B.length;
+  if(n*m>60000) return esc(mode==="ins"?b:a);
+  const L=Array.from({length:n+1},()=>new Uint16Array(m+1));
+  for(let i=n-1;i>=0;i--) for(let j=m-1;j>=0;j--) L[i][j]=A[i]===B[j]?L[i+1][j+1]+1:Math.max(L[i+1][j],L[i][j+1]);
+  const kA=new Set(), kB=new Set(); let i=0, j=0;
+  while(i<n && j<m){ if(A[i]===B[j]){ kA.add(i); kB.add(j); i++; j++; } else if(L[i+1][j]>=L[i][j+1]) i++; else j++; }
+  const T=mode==="ins"?B:A, K=mode==="ins"?kB:kA;
+  let out="", buf="";
+  const flush=()=>{ if(!buf) return; const mm=buf.match(/^([\s\S]*?)(\s*)$/); out+=`<${mode}>${esc(mm[1])}</${mode}>`+esc(mm[2]); buf=""; };
+  T.forEach((t,k)=>{ if(K.has(k) || (!t.trim() && !buf)){ flush(); out+=esc(t); } else buf+=t; });
+  flush();
+  return out;
+}
+function slideLabel(file){ return work?.handwritten ? "필기: "+file : file.replace(/\.[^.]+$/,""); }
+function renderWorkLines(){
+  const r=work.result, rv=new Set(r.reverted||[]), by={};
+  r.segments.forEach(s=>by[s.i]=s);
+  const imp=r.important||[], impStart={}, impSet=new Set(), open=new Set((work.review?.items||[]).filter(x=>x.status==="open").map(x=>x.i));
+  imp.forEach(p=>{ (impStart[p.from]=impStart[p.from]||[]).push(p); for(let i=p.from;i<=p.to;i++) impSet.add(i); });
+  const paras = r.paragraphs.length ? r.paragraphs : [{from:r.segments[0].i, to:r.segments.at(-1).i, heading:null}];
+  let h="";
+  for(const p of paras){
+    const segs=[]; for(let i=p.from;i<=p.to;i++) if(by[i]) segs.push(by[i]);
+    const shown = workOnlyChg ? segs.filter(s=>s.text!=null) : segs;
+    if(!shown.length) continue;
+    const sl=p.slide;
+    if(p.heading) h+=`<div class="ph">${esc(p.heading)}${sl?` <button class="loc" data-file="${esc(sl.file)}" data-page="${sl.range[0]}" title="슬라이드 미리보기">${esc(slideLabel(sl.file))} p.${sl.range[0]}${sl.range[1]!==sl.range[0]?"–"+sl.range[1]:""}${sl.confidence!=null&&sl.confidence<0.5?"?":""}</button>`:""}</div>`;
+    for(const s of shown){
+      for(const p of impStart[s.i]||[]) h+=`<div class="impd">★ 중요 (${IKIND[p.kind]||p.kind}): ${esc(p.summary)}</div>`;
+      h+=segHtml(s, rv.has(s.i), sl, impSet.has(s.i), open.has(s.i));
+    }
+  }
+  box.innerHTML = h || `<div class="empty">바뀐 문장이 없습니다.</div>`;
+}
+function segHtml(s, reverted, sl, important=false, toCheck=false){
+  const man=work.manual?.[s.i], changed=s.text!=null && !man, at=sl?.at?.[s.i];
+  let body;
+  if(man) body=esc(man.text);
+  else if(s.flag==="M") body=`<span class="miss">[청취 불가 ${clock(Math.floor(s.start))}–${clock(Math.ceil(s.end))}]</span>`;
+  else if(!changed || reverted) body=esc(s.orig);
+  else if(workMode==="orig") body=s.text===""?`<del>${esc(s.orig)}</del>`:diffHtml(s.orig, s.text, "del");
+  else body=s.text===""?`<del>${esc(s.orig)}</del> <span class="hint">(지움)</span>`:diffHtml(s.orig, s.text, "ins");
+  const cls=["ln", changed&&!reverted?"chg":"", reverted?"rev":"", important?"imp":"", toCheck?"rv":""].join(" ");
+  const ro=work.state.status==="superseded";  // 대체된 작업은 읽기 전용
+  const btn=changed&&!ro?`<button class="rvb" data-rv="${s.i}" data-on="${reverted?0:1}" title="${reverted?"교정본으로 다시 적용":"이 문장을 원본으로 되돌리기"}">${reverted?"↻ 교정":"↺ 원본"}</button>`:"";
+  const tip=changed&&s.reason?` title="${esc("교정: "+s.reason)}"`:"";
+  const f=man?"H":s.flag, flag=f?`<span class="flag${f==="H"?" h":""}" title="${FLAG[f]}">${f}</span>`:"";
+  const mark=at?`<button class="loc" data-file="${esc(sl.file)}" data-page="${at}">p.${at}</button> `:"";
+  const audio=!$("#jPlayer").hidden, play=audio?`<button class="pl" data-play="${s.start}" title="여기부터 듣기">▶</button>`:"";
+  const ed=ro?"":`<button class="ed${s.flag||man?"":" opt"}" data-edit="${s.i}" title="직접 듣고 입력 (md에 가장 우선 반영)">✎</button>`;
+  let h=`<div class="${cls}" id="seg-${s.i}"${tip}><span class="ts">[${clock(Math.floor(s.start))}]</span>${play}${flag}${mark}${body}${btn}${ed}</div>`;
+  if(editing===s.i) h+=`<div class="medit"><input type="text" id="mText" value="${esc(man?man.text:s.flag==="M"?"":(changed&&!reverted&&s.text)||s.orig)}" placeholder="들은 내용을 입력 (비우고 저장하면 직접 입력을 지움)">
+    <button class="btn primary" data-msave="${s.i}">저장</button><button class="btn" data-mcancel>취소</button></div>`;
+  return h;
+}
+$("#jWork").addEventListener("click", async e => {
+  const c=e.target.closest("[data-copy]");
+  if(c){ try{ await navigator.clipboard.writeText(c.dataset.copy); toast("복사했습니다: "+c.dataset.copy); }catch{ toast("복사 실패"); } return; }
+  const md=e.target.closest("[data-mode]");
+  if(md){ workMode=md.dataset.mode; store.set("workMode", workMode); renderWorkPanel(); renderWorkLines(); return; }
+  const rc=e.target.closest("[data-rcomplete]");
+  if(rc){ const on=rc.dataset.rcomplete==="1", n=work.review.open;
+    if(on && n && !confirm(`아직 확인하지 않은 ${n}곳은 "확인 안 함"으로 md 처리 메모에 남습니다. 완료할까요?`)) return;
+    return reviewPost({complete:on}, on?"확인을 마쳤습니다 — 이 강의는 완료입니다":"완료를 취소했습니다"); }
+  const rk=e.target.closest("[data-rkeep]"); if(rk) return reviewPost({id:rk.dataset.rkeep, status:"kept"});
+  const ro=e.target.closest("[data-rreopen]"); if(ro) return reviewPost({id:ro.dataset.rreopen, status:"open"});
+  const cd=e.target.closest("[data-cand]");
+  if(cd){ const i=+cd.dataset.i, s=work.result.segments.find(x=>x.i===i), t=finalText(s), c=cd.dataset.cand;
+    const x=work.review.items.find(x=>x.i===i), cur=(x.candidates||[]).find(k=>t.includes(k));
+    if(cur===c) return reviewPost({id:cd.dataset.rid, status:"kept"}, `지금 문장(${c}) 그대로 둡니다`);
+    if(cur) return reviewSave(i, t.replace(cur, c));
+    rEditing=i; renderWorkPanel(); const inp=$("#rText"); if(inp){ inp.focus(); } return; }
+  const re=e.target.closest("[data-redit]");
+  if(re){ rEditing=+re.dataset.redit; renderWorkPanel(); const inp=$("#rText"); if(inp){ inp.focus(); inp.select(); }
+    const s=work.result.segments.find(x=>x.i===rEditing); if(s && !$("#jPlayer").hidden) playAt(s.start); return; }
+  const rs=e.target.closest("[data-rsave]"); if(rs) return reviewSave(+rs.dataset.rsave, $("#rText")?.value ?? "");
+  if(e.target.closest("[data-rcancel]")){ rEditing=null; renderWorkPanel(); return; }
+  const pl=e.target.closest("[data-play]"); if(pl){ playAt(+pl.dataset.play); return; }
+  const go=e.target.closest("[data-go]");
+  if(go){ if(workOnlyChg){ workOnlyChg=false; renderWorkPanel(); renderLines(); }
+    const el=document.getElementById("seg-"+go.dataset.go) || [...box.querySelectorAll(".ln")][+go.dataset.go];
+    if(el){ autoScroll=false; el.scrollIntoView({block:"center"}); el.classList.add("hl"); setTimeout(()=>el.classList.remove("hl"),1500); }
+    if(go.dataset.t && !$("#jPlayer").hidden) playAt(+go.dataset.t); }
+});
+$("#jWork").addEventListener("change", async e => {
+  if(e.target.id==="wOnly"){ workOnlyChg=e.target.checked; renderWorkLines(); }
+  if(e.target.id==="nbFile" && e.target.files.length){  // /crosscheck용 NotebookLM 전사본 → jobs/<작업이름>/notebooklm.md
+    const fd=new FormData(); fd.append("file", e.target.files[0]);
+    try{ const r=await api(`/api/work/${encodeURIComponent(work.state.name)}/notebooklm`,{method:"POST",body:fd});
+      await loadWork(work.state.name); toast(`올렸습니다 (${r.chars.toLocaleString()}자) → ${r.command}`); }catch(err){ toast("올리기 실패: "+err.message); }
+  }
+});
+$("#jWork").addEventListener("toggle", e => { const k=e.target.dataset?.k; if(k) workOpen[k]=e.target.open; }, true);
+$("#jWork").addEventListener("keydown", e => {
+  if(e.target.id!=="rText") return;
+  if(e.key==="Enter"){ e.preventDefault(); reviewSave(rEditing, e.target.value); }
+  if(e.key==="Escape"){ rEditing=null; renderWorkPanel(); }
+});
+function rerenderLines(){ const top=box.scrollTop; renderWorkLines(); box.scrollTop=top; }
+async function saveManual(i){
+  const text=$("#mText")?.value ?? "";
+  try{
+    const r=await api(`/api/work/${encodeURIComponent(work.state.name)}/manual`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({i, text})});
+    work.manual=r.manual; editing=null; rerenderLines(); renderWorkPanel();
+    toast(text.trim() ? "직접 입력을 저장했습니다"+(work.state.md_path?" (md 다시 저장)":" (transcript.txt에 반영)") : "직접 입력을 지웠습니다");
+  }catch(err){ toast(err.message); }
+}
+box.addEventListener("keydown", e => {
+  if(e.target.id!=="mText") return;
+  if(e.key==="Enter"){ e.preventDefault(); saveManual(editing); }
+  if(e.key==="Escape"){ e.stopPropagation(); editing=null; rerenderLines(); }
+});
+box.addEventListener("click", async e => {
+  const pl=e.target.closest("[data-play]"); if(pl){ playAt(+pl.dataset.play); return; }
+  const ed=e.target.closest("[data-edit]");
+  if(ed && work){ editing=+ed.dataset.edit; rerenderLines(); const t=$("#mText"); if(t){ t.focus(); t.select(); }
+    const s=work.result.segments.find(x=>x.i===editing); if(s && !$("#jPlayer").hidden) playAt(s.start); return; }
+  const ms=e.target.closest("[data-msave]"); if(ms){ saveManual(+ms.dataset.msave); return; }
+  if(e.target.closest("[data-mcancel]")){ editing=null; rerenderLines(); return; }
+  const rb=e.target.closest("[data-rv]");
+  if(rb && work){ try{
+      const r=await api(`/api/work/${encodeURIComponent(work.state.name)}/revert`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({i:+rb.dataset.rv, revert:rb.dataset.on==="1"})});
+      work.result.reverted=r.reverted; const top=box.scrollTop; renderWorkLines(); box.scrollTop=top; renderWorkPanel();
+      toast(rb.dataset.on==="1"?"원본으로 되돌렸습니다 (md 다시 저장)":"교정본으로 다시 적용했습니다 (md 다시 저장)");
+    }catch(err){ toast(err.message); } return; }
+  const loc=e.target.closest(".loc");
+  if(loc && work) openSlide(work.job.subject, loc.dataset.file, +loc.dataset.page);
+});
+async function openSlide(subject, file, page){
+  const m=$("#slideModal"), b=$("#slideBox");
+  try{
+    const p=await api(`/api/subjects/${encodeURIComponent(subject)}/decks/${encodeURIComponent(file)}/pages/${page}`);
+    b.innerHTML=`<div class="mhead"><b>${esc(file)} p.${page}/${p.pages_total} · ${esc(p.title||"")}</b>
+        <button class="btn" data-sp="${page-1}" ${page<=1?"disabled":""}>◀</button><button class="btn" data-sp="${page+1}" ${page>=p.pages_total?"disabled":""}>▶</button>
+        <button class="x" data-close title="닫기">✕</button></div>
+      <div class="hint">${esc(p.summary||"")}</div>
+      ${(p.terms||[]).length?`<div class="hint">용어: ${esc(p.terms.join(", "))}</div>`:""}
+      ${p.png?`<img src="/api/subjects/${encodeURIComponent(subject)}/decks/${encodeURIComponent(file)}/png/${page}" alt="${esc(file)} p.${page}">`:`<div class="hint">(PPTX는 페이지 그림 미리보기가 없습니다)</div>`}`;
+    b.dataset.subject=subject; b.dataset.file=file; m.hidden=false;
+  }catch(err){ toast(err.message); }
+}
+$("#slideModal").addEventListener("click", e => {
+  const b=$("#slideBox");
+  if(e.target.id==="slideModal" || e.target.closest("[data-close]")){ $("#slideModal").hidden=true; return; }
+  const sp=e.target.closest("[data-sp]"); if(sp && !sp.disabled) openSlide(b.dataset.subject, b.dataset.file, +sp.dataset.sp);
+});
+document.addEventListener("keydown", e => { if(e.key==="Escape") $("#slideModal").hidden=true; });
+
+/* ---------- 과목 ---------- */
+const KIND = {slide:"슬라이드", handwritten:"손필기", reference:"참고 자료"};
+const MSTATE = {new:"새 파일", changed:"변경됨", registered:"등록됨"};
+let subjData = null, curSubj = store.get("subject");
+const subjOpen = {};  // 펼쳐 둔 <details> (다시 그려도 유지)
+const toLines = v => v.split("\n").map(s=>s.trim()).filter(Boolean);
+const curSubject = () => subjData.subjects.find(x=>x.name===curSubj);
+
+async function loadSubjects(full=true){
+  subjData = await api("/api/subjects");
+  const names = subjData.subjects.map(s=>s.name);
+  if(!names.includes(curSubj)) { curSubj = names[0]; full = true; }
+  renderSubjTabs(); renderSuggAlert();
+  if(full) renderSubjBody(); else renderSubjStatus();
+}
+function renderSubjTabs(){
+  $("#subjTabs").innerHTML = subjData.subjects.map(s=>{
+    const todo = s.status.materials.filter(m=>m.state!=="registered").length, sg = s.status.pending_suggestions;
+    return `<button class="tab ${s.name===curSubj?"on":""}" data-subj="${esc(s.name)}">${esc(s.name)}${todo?`<span class="cnt" title="등록할 강의자료 ${todo}개">📄${todo}</span>`:""}${sg?`<span class="cnt" title="확인이 필요한 제안 ${sg}개">🔎${sg}</span>`:""}${s.status.glossary_count?"":`<span class="cnt" title="용어집이 비어 있음 → /bootstrap-glossary ${esc(s.name)}">용어집 없음</span>`}</button>`;
+  }).join("") + `<button class="tab" id="subjAdd" title="듣는 과목 추가">＋ 과목 추가</button>`;
+}
+$("#subjTabs").onclick = e => { if(e.target.closest("#subjAdd")){ renderSubjAdd(); return; }
+  const t=e.target.closest("[data-subj]"); if(!t) return;
+  curSubj=t.dataset.subj; store.set("subject", curSubj); renderSubjTabs(); renderSubjBody(); };
+
+// 과목 추가: 이름과 강의 유형을 고르면 data/<과목>/과 강의 폴더가 만들어짐
+function renderSubjAdd(){
+  const first=!subjData.subjects.length, set=subjData.settings;
+  $("#subjBody").innerHTML = `<div class="inner" id="subjAddForm">
+    ${first?`<div class="alert">아직 과목이 없습니다. 듣는 과목을 추가하면 시작할 수 있습니다.</div>`:""}
+    <label class="field"><span>과목 이름 (녹음 파일 이름에 그대로 씀: 과목이름_YYMMDD.m4a)</span><input type="text" id="addName" maxlength="40" placeholder="예: 운영체제"></label>
+    <label class="field"><span>강의 유형 (시작 규칙, 추가한 뒤 언제든 수정)</span><select id="addTpl">${subjData.templates.map(t=>`<option value="${esc(t.id)}">${esc(t.label)}</option>`).join("")}</select></label>
+    <div class="hint" id="addTplHint"></div>
+    <label class="field"><span>강의 폴더 루트 (과목 폴더가 만들어질 곳)</span><input type="text" id="addRoot" value="${esc(set.root)}"></label>
+    <div><button class="btn primary" id="addSave">과목 추가</button></div>
+  </div>`;
+  const hint=()=>{ $("#addTplHint").textContent=subjData.templates.find(t=>t.id===$("#addTpl").value)?.summary||""; };
+  $("#addTpl").onchange=hint; hint();
+  $("#addName").focus();
+  $("#addSave").onclick = async () => {
+    try{
+      const root=$("#addRoot").value.trim();
+      if(root!==set.root) await api("/api/settings",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({root})});
+      const r=await api("/api/subjects",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:$("#addName").value,template:$("#addTpl").value})});
+      curSubj=r.name; store.set("subject",curSubj); await loadSubjects(); toast(`'${r.name}' 과목을 추가했습니다`);
+    }catch(e){ toast(e.message); }
+  };
+}
+function renderSubjBody(){
+  const s=curSubject(); if(!s){ renderSubjAdd(); return; }
+  const r=s.rules, set=subjData.settings;
+  const notation = (r.notation||[]).map(n=>`${n.spoken} → ${n.written}`).join("\n");
+  const books = (r.books||[]).map(b=>b.note?`${b.path} | ${b.note}`:b.path).join("\n");
+  const ta = (id, label, val, rows=3, ph="") => `<label class="field"><span>${label}</span><textarea id="${id}" rows="${rows}" placeholder="${esc(ph)}">${esc(val)}</textarea></label>`;
+  $("#subjBody").innerHTML = `<div id="subjStatus"></div>
+  <details data-k="rules" ${subjOpen.rules?"open":""}><summary>과목 규칙 편집</summary><div class="inner">
+    <label class="field"><span>한 줄 요약</span><input type="text" id="srSummary" value="${esc(r.summary||"")}"></label>
+    ${ta("srRules","교정 규칙 (한 줄에 하나, Claude Code가 교정할 때 따름)",(r.rules||[]).join("\n"),4)}
+    ${ta("srNotation","표기 규칙 (한 줄에 하나, \"말 → 표기\")",notation,3,"x 제곱 → x²")}
+    ${ta("srPhrases","교수님 고정 표현 (한 줄에 하나, Whisper 프롬프트에 사용)",(r.professor_phrases||[]).join("\n"),2)}
+    ${ta("srStop","용어 제안에서 뺄 일반 단어 (쉼표 또는 줄바꿈으로 구분)",(r.term_stopwords||[]).join(", "),3,"개념, 내용, 예제, true, false")}
+    ${ta("srBooks","원서 md (한 줄에 하나, \"과목 폴더 기준 경로 | 메모\", * 사용 가능)",books,2)}
+    ${ta("srRefDirs","참고 자료 폴더 (과목 폴더 기준, 텍스트만 용어 추출에 사용)",(r.reference_dirs||[]).join("\n"),2)}
+    <div class="two">
+      ${ta("srIgnDirs","무시할 폴더 이름",(r.ignore_dirs||[]).join("\n"),2)}
+      ${ta("srIgnFiles","무시할 파일 (패턴, 예: *_전체.pdf)",(r.ignore_files||[]).join("\n"),2)}
+    </div>
+    <div class="checks">
+      <label><input type="checkbox" id="srSlides" ${r.has_slides?"checked":""}> 교수님 슬라이드 있음</label>
+      <label><input type="checkbox" id="srHand" ${r.handwritten?"checked":""}> 강의자료가 손필기 (모든 페이지를 이미지로 읽음)</label>
+      <label><input type="checkbox" id="srCode" ${r.keep_code_identifiers?"checked":""}> 코드 식별자 표기 그대로 유지</label>
+      <label><input type="checkbox" id="srEng" ${r.prefer_english_terms?"checked":""}> 용어 대표 표기를 영어로 (한국어는 별칭)</label>
+    </div>
+    <div><button class="btn primary" id="srSave">규칙 저장</button> <button class="btn" id="srDelete">이 과목 삭제</button></div>
+  </div></details>
+  <details data-k="settings" ${subjOpen.settings?"open":""}><summary>전체 설정</summary><div class="inner">
+    <label class="field"><span>강의 폴더 루트 (과목 폴더들이 있는 곳)</span><input type="text" id="setRoot" value="${esc(set.root)}"></label>
+    <label class="field"><span>Whisper beam size (기본 5, 클수록 느리지만 정확 · 모든 과목)</span><input type="number" id="setBeam" min="1" max="10" value="${set.beam_size||5}"></label>
+    <div><button class="btn" id="setSave">설정 저장</button></div>
+  </div></details>
+  <details data-k="manual" ${subjOpen.manual?"open":""}><summary>고급: 수동 Whisper 프롬프트 <span class="hint">${r.manual_prompt?.enabled?"(켜짐 — 프롬프트 빌더 대신 사용 중)":"(꺼짐)"}</span></summary><div class="inner">
+    <div class="hint">보통은 쓰지 않습니다. 켜면 이 과목 녹음은 과목 프롬프트 빌더(용어집·진도 위치·교수님 표현) 대신 아래 값을 그대로 Whisper에 넣습니다. 교정 사전은 그대로 적용됩니다.</div>
+    <label><input type="checkbox" id="mpOn" ${r.manual_prompt?.enabled?"checked":""}> 수동 프롬프트 사용</label>
+    ${ta("mpPrompt","초기 프롬프트 (initial_prompt)",r.manual_prompt?.prompt||"",3)}
+    ${ta("mpHot","핫워드 (hotwords, 공백으로 구분)",r.manual_prompt?.hotwords||"",2)}
+    <div><button class="btn" id="mpSave">수동 프롬프트 저장</button></div>
+  </div></details>
+  <details data-k="clean" ${subjOpen.clean?"open":""}><summary>저장 공간 정리</summary><div class="inner" id="cleanBox"><div class="hint">불러오는 중…</div></div></details>`;
+  if(subjOpen.clean) loadCleanup();
+  renderSubjStatus();
+  $("#srSave").onclick = saveSubjectRules;
+  $("#srDelete").onclick = async () => {
+    if(!confirm(`'${curSubj}' 과목을 목록에서 지울까요? 용어집 등은 backups/로 옮기고, 강의 폴더의 파일은 그대로 둡니다.`)) return;
+    try{ await api("/api/subjects/"+encodeURIComponent(curSubj),{method:"DELETE"}); toast("과목을 지웠습니다"); curSubj=undefined; await loadSubjects(); }catch(e){ toast(e.message); }
+  };
+  $("#setSave").onclick = async () => {
+    try{ await api("/api/settings",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({root:$("#setRoot").value, beam_size:+$("#setBeam").value||5})});
+      toast("설정을 저장했습니다"); loadSubjects(); }catch(e){ toast(e.message); }
+  };
+  $("#mpSave").onclick = async () => {
+    const body={manual_prompt:{enabled:$("#mpOn").checked, prompt:$("#mpPrompt").value, hotwords:$("#mpHot").value}};
+    try{ const r=await api("/api/subjects/"+encodeURIComponent(curSubj),{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+      Object.assign(curSubject(), {rules:r.rules, status:r.status}); renderSubjBody();
+      toast(body.manual_prompt.enabled?"수동 프롬프트를 켰습니다 (다음 전사부터)":"수동 프롬프트를 껐습니다 (과목 프롬프트 빌더 사용)"); }catch(e){ toast(e.message); }
+  };
+}
+function renderSubjStatus(){
+  const s=curSubject(); if(!s) return;
+  const st=s.status, r=s.rules, mats=st.materials, pr=st.progress||{};
+  const slides=mats.filter(m=>m.kind!=="reference"), refs=mats.filter(m=>m.kind==="reference");
+  const reg = a => a.filter(m=>m.state==="registered").length;
+  const todo=mats.filter(m=>m.state!=="registered"), done=mats.filter(m=>m.state==="registered");
+  let h = `<div class="hint">${esc(r.summary||"")}</div>`;
+  if(!st.root_ok) h += `<div class="alert err">과목 폴더를 찾을 수 없습니다. 아래 "전체 설정"에서 루트 경로를 확인하세요.</div>`;
+  h += `<div class="chips">
+    <span class="chip">${r.handwritten?"손필기":"강의 슬라이드"} 등록 <b>${reg(slides)}/${slides.length}</b></span>
+    ${refs.length?`<span class="chip">참고 자료 <b>${reg(refs)}/${refs.length}</b></span>`:""}
+    <span class="chip">진도 위치 <b>${pr.deck?esc(pr.deck)+(pr.page?" p."+pr.page:""):"미정"}</b></span>
+    <span class="chip">용어집 <b>${st.glossary_count}</b></span>
+    <span class="chip">교정 사전 <b>${st.fix_count}</b></span>
+    <span class="chip">승인 대기 제안 <b>${st.pending_suggestions}</b></span>
+    <button class="x" id="subjRefresh" title="다시 불러오기">↻</button>
+  </div>`;
+  const est = c => c ? ` <span class="hint">(텍스트 ${c.pdf}쪽 / OCR ${c.ocr}쪽 / 이미지 확인 ${c.image}쪽)</span>` : "";
+  if(todo.length) h += `<div class="alert warn">등록하지 않은 강의자료 ${todo.length}개 <span class="hint">— 파일별 명령을 복사해 VS Code의 Claude Code에 붙여 넣으세요. 처리 전에 예상치를 보여 주고 확인을 받습니다.</span>
+    <ul class="mlist">${todo.map(m=>{ const c=st.register_file_commands[m.file];
+      return `<li>[${MSTATE[m.state]}] [${KIND[m.kind]}] ${esc(m.file)}${est(m.counts)} <button class="x" title="${esc(c)}" data-copy="${esc(c)}">📋</button></li>`; }).join("")}</ul></div>`;
+  else if(!mats.length) h += `<div class="hint">강의자료 폴더가 비어 있습니다: ${esc(st.materials_dir)}</div>`;
+  if(done.length) h += `<details data-k="mats" ${subjOpen.mats?"open":""}><summary>등록된 자료 ${done.length}개</summary>
+    <ul class="mlist">${done.map(m=>`<li>[${KIND[m.kind]}] ${esc(m.file)}${m.pages?` · ${m.pages}쪽`:""}</li>`).join("")}</ul></details>`;
+  if((st.recorrect||[]).length) h += `<div class="alert warn">강의자료 미등록으로 교정한 전사본 ${st.recorrect.length}개 — 강의자료가 등록됐으니 슬라이드 위치를 넣어 다시 교정할 수 있습니다 (Whisper는 다시 돌리지 않음)
+    <ul class="mlist">${st.recorrect.map(c=>`<li>${esc(c.name)} · ${esc(c.source_file)}</li>`).join("")}</ul>
+    <div class="cmd"><code>${esc(st.recorrect_command)}</code><button class="x" title="복사" data-copy="${esc(st.recorrect_command)}">📋</button></div></div>`;
+  if(!st.glossary_count) h += `<div class="alert warn">용어집이 비어 있습니다. 녹음을 전사하기 전에 Claude Code에서 먼저 실행하세요 (용어집 없이 전사하면 오인식이 많습니다):
+    <div class="cmd"><code>${esc(st.bootstrap_command)}</code><button class="x" title="복사" data-copy="${esc(st.bootstrap_command)}">📋</button></div></div>`;
+  h += `<details data-k="sugg" ${subjOpen.sugg?"open":""}><summary>확인이 필요한 제안 ${st.pending_suggestions}개 <span class="hint">(자동 승인 기준을 통과하지 못한 것만 · 자동 승인된 것은 변경 기록에)</span></summary><div class="inner" id="suggBox"><div class="hint">불러오는 중…</div></div></details>`;
+  h += `<details data-k="changes" ${subjOpen.changes?"open":""}><summary>변경 기록 <span class="hint">(자동 승인·직접 승인·거절, 승인은 되돌리기 가능)</span></summary><div class="inner" id="chBox"><div class="hint">불러오는 중…</div></div></details>`;
+  h += `<details data-k="boot" ${subjOpen.boot?"open":""}><summary>중간고사 자료로 용어집 시작하기 (샘플 전사 ${st.samples}개)</summary><div class="inner" id="bootBox"><div class="hint">불러오는 중…</div></div></details>`;
+  h += `<details data-k="glo" ${subjOpen.glo?"open":""}><summary>용어집 · 교정 사전</summary><div class="inner" id="gloBox"><div class="hint">불러오는 중…</div></div></details>`;
+  h += `<details data-k="prompt" ${subjOpen.prompt?"open":""}><summary>Whisper 프롬프트 (프롬프트 빌더 미리보기)</summary><div class="inner" id="promptBox"><div class="hint">불러오는 중…</div></div></details>`;
+  $("#subjStatus").innerHTML = h;
+  $("#subjRefresh").onclick = () => loadSubjects(false).then(()=>toast("다시 불러왔습니다")).catch(e=>toast(e.message));
+  if(subjOpen.glo) loadGlossary();
+  if(subjOpen.changes) loadChanges();
+  if(subjOpen.sugg) loadSuggestions();
+  if(subjOpen.prompt) loadPrompt();
+  if(subjOpen.boot) loadSamples();
+}
+$("#subjBody").addEventListener("toggle", e => {
+  const k=e.target.dataset?.k; if(!k) return;
+  subjOpen[k]=e.target.open; if(k==="glo" && e.target.open) loadGlossary();
+  if(k==="changes" && e.target.open) loadChanges();
+  if(k==="sugg" && e.target.open) loadSuggestions();
+  if(k==="prompt" && e.target.open) loadPrompt();
+  if(k==="boot" && e.target.open) loadSamples();
+  if(k==="clean" && e.target.open) loadCleanup();
+}, true);
+// 저장 공간 정리: 다시 만들 수 있는 파일만 (Whisper 원본·세그먼트·edits·교정본은 서버가 절대 지우지 않음)
+function renderCleanup(r){
+  const box=$("#cleanBox"); if(!box) return;
+  box.innerHTML=`<table class="gtable ctable"><tr><th></th><th>항목</th><th>크기</th><th>설명</th></tr>
+    ${r.items.map(x=>`<tr class="${x.count?"":"off"}"><td><input type="checkbox" data-clean="${x.key}" ${x.count&&x.key!=="backups"?"checked":""} ${x.count?"":"disabled"}></td>
+      <td>${esc(x.label)}</td><td>${x.count}개 · ${mb(x.bytes)}</td><td class="hint">${esc(x.note)}</td></tr>`).join("")}</table>
+    <div class="hint">🔒 ${esc(r.protected)}</div>
+    <div class="cmd"><button class="btn danger" id="cleanGo">체크한 항목 정리</button><button class="x" id="cleanRefresh" title="다시 계산">↻</button></div>`;
+}
+async function loadCleanup(){ try{ renderCleanup(await api("/api/cleanup")); }catch(e){ const b=$("#cleanBox"); if(b) b.innerHTML=`<div class="alert err">${esc(e.message)}</div>`; } }
+$("#subjBody").addEventListener("click", async e => {
+  if(e.target.id==="cleanRefresh") return loadCleanup();
+  if(e.target.id!=="cleanGo") return;
+  const targets=[...document.querySelectorAll("[data-clean]:checked")].map(b=>b.dataset.clean);
+  if(!targets.length) return toast("정리할 항목을 체크하세요");
+  if(!confirm("체크한 항목의 파일을 지울까요? (다시 만들 수 있는 파일만 지웁니다)")) return;
+  try{ const r=await api("/api/cleanup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({targets})});
+    renderCleanup(r); const n=Object.values(r.done).reduce((a,x)=>a+x.count,0), b=Object.values(r.done).reduce((a,x)=>a+x.bytes,0);
+    toast(`${n}개 파일 정리 (${mb(b)})`); }catch(err){ toast(err.message); }
+});
+// 중간고사 샘플 전사: 고른 녹음을 Whisper만 돌림 → /bootstrap-glossary가 같은 날짜 NotebookLM 전사본과 비교해 교정 규칙 후보를 찾음
+async function loadSamples(){
+  const name=curSubj, r=await api(`/api/subjects/${encodeURIComponent(name)}/samples`);
+  const box=$("#bootBox"); if(!box || name!==curSubj) return;
+  const st=curSubject().status, def=new Set(r.default);
+  box.innerHTML = `<div class="hint">① 중간고사 녹음 ${r.count}개 정도를 골라 Whisper로만 전사합니다 (복원·교정 작업 없음, 원본은 복사해서 읽기만 함).
+      NotebookLM 전사본이 있는 녹음을 고르면 Whisper가 자주 틀리는 표기를 찾을 수 있습니다.<br>
+      ② 끝나면 아래 명령을 Claude Code에 입력하세요. 중간고사 강의자료(교수님 자료만)·원서·NotebookLM 전사본에서 용어와 교정 규칙을 제안합니다.</div>
+    ${r.recordings.length?`<div class="slist">${r.recordings.map(x=>`<label><input type="checkbox" data-sample="${esc(x.file)}" ${def.has(x.file)?"checked":""} ${x.job?"disabled":""}>
+      <span>${esc(x.file)}</span><span class="hint">${(x.size/1048576).toFixed(0)}MB${x.notebooklm?" · NotebookLM 있음":" · NotebookLM 없음"}${x.sample?" · 샘플 있음 ("+esc(x.sample.slice(0,10))+")":""}${x.job?" · "+(STATUS[x.job_status]||x.job_status):""}</span></label>`).join("")}</div>
+      <div class="cmd"><button class="btn primary" id="sampleGo">선택한 녹음 Whisper 전사</button><span class="hint" id="sampleCnt"></span></div>`
+      :`<div class="hint">중간고사 녹음이 없습니다: ${esc(r.folder)}</div>`}
+    <div class="cmd"><code>${esc(st.bootstrap_command)}</code><button class="x" title="복사" data-copy="${esc(st.bootstrap_command)}">📋</button>
+      <span class="hint">샘플 전사 ${st.samples}개${st.samples?"":" (없어도 실행할 수 있지만 교정 규칙 후보가 적어집니다)"}</span></div>`;
+  const cnt=()=>{ const n=box.querySelectorAll("[data-sample]:checked").length; const el=$("#sampleCnt"); if(el) el.textContent=`${n}개 선택`; };
+  box.addEventListener("change", cnt); cnt();
+  const go=$("#sampleGo"); if(go) go.onclick = async () => {
+    const files=[...box.querySelectorAll("[data-sample]:checked")].map(b=>b.dataset.sample);
+    if(!files.length) return toast("녹음을 고르세요");
+    try{ const res=await api(`/api/subjects/${encodeURIComponent(name)}/samples`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({files})});
+      res.jobs.forEach(j=>jobsById[j.id]=j); renderQueue(); loadHistory(); loadSamples();
+      toast(`${res.jobs.length}개를 대기열에 추가했습니다 (끝나면 샘플로 저장)`); }catch(e){ toast(e.message); }
+  };
+}
+const PKIND = {progress:"① 진도 다음 페이지", glossary:"② 용어집", phrase:"③ 교수님 표현"};
+async function loadPrompt(){  // 파일명이 <과목>_<YYMMDD>인 녹음을 "과목 프롬프트 빌더"로 올리면 이 프롬프트가 들어감
+  const name=curSubj, r=await api(`/api/subjects/${encodeURIComponent(name)}/prompt`);
+  const box=$("#promptBox"); if(!box || name!==curSubj) return;
+  const t=r.tokens;
+  box.innerHTML = `<div class="hint">initial_prompt + hotwords <b>${t.total}/${t.limit}</b>토큰${t.measured?" (Whisper 토크나이저로 실측)":" (토크나이저가 없어 어림값)"} ·
+      우선순위: ① 진도 위치 다음 페이지의 용어 → ② 용어집(우선순위·최근 등장·빈도) → ③ 교수님 고정 표현</div>
+    <div class="pbox"><div>initial_prompt (${t.prompt}토큰)</div><code>${esc(r.prompt)}</code><div>hotwords (${t.hotwords}토큰)</div><code>${esc(r.hotwords||"(없음)")}</code></div>
+    ${r.cut.length?`<div class="alert warn">토큰 한도 때문에 뺀 항목 ${r.cut.length}개: ${esc(r.cut.join(", "))}</div>`:""}
+    <div class="gscroll"><table class="gtable"><tr><th>구분</th><th>항목</th><th>출처</th><th>토큰</th><th></th></tr>
+      ${r.items.map(x=>`<tr class="${x.used?"":"off"}"><td>${PKIND[x.kind]||x.kind}</td><td>${esc(x.text)}</td><td>${esc(x.source)}</td><td>${x.tokens}</td><td>${x.used?"들어감":"잘림"}</td></tr>`).join("")}
+    </table></div>`;
+}
+$("#subjBody").addEventListener("click", async e => {
+  const c=e.target.closest("[data-copy]"); if(!c) return;
+  try{ await navigator.clipboard.writeText(c.dataset.copy); toast("복사했습니다: "+c.dataset.copy); }catch{ toast("복사 실패"); }
+});
+async function loadGlossary(){
+  const name=curSubj, r=await api(`/api/subjects/${encodeURIComponent(name)}/glossary`);
+  const box=$("#gloBox"); if(!box || name!==curSubj) return;
+  box.innerHTML = `<div><b>용어집</b> <span class="hint">우선순위 1(낮음)~5(높음)</span></div>` + (r.terms.length ? `<div class="gscroll"><table class="gtable">
+      <tr><th>표기</th><th>별칭</th><th>출처</th><th>우선순위</th><th>빈도</th><th>최근 등장</th></tr>
+      ${r.terms.map(t=>`<tr><td>${esc(t.term)}</td><td>${esc((t.aliases||[]).join(", "))}</td><td>${esc((t.sources||[]).join(", "))}</td><td>${t.priority??""}</td><td>${t.freq||0}</td><td>${esc(t.last_seen||"")}</td></tr>`).join("")}
+    </table></div>` : `<div class="hint">아직 용어가 없습니다.</div>`)
+    + `<div><b>교정 사전</b> <span class="hint">⚠ = 표기 규칙과 맞지 않을 수 있는 규칙 (fix.json에서 직접 고치거나 지우세요)</span></div>` + (r.fix.length ? `<div class="gscroll"><table class="gtable">
+      <tr><th>틀린 표기</th><th>바른 표기</th><th>출처</th></tr>
+      ${r.fix.map(f=>`<tr><td>${esc(f.wrong)}</td><td>${esc(f.right)}${warnHtml(f.warnings)}</td><td>${esc(f.source||"")}</td></tr>`).join("")}
+    </table></div>` : `<div class="hint">아직 교정 규칙이 없습니다.</div>`);
+}
+// 제안 승인: 용어(덱별) · 교정 규칙 · 표기 규칙 · 진도 위치. 그룹마다 "체크한 것 승인 / 체크 안 한 것 거절"
+const ORIGIN = {correct:"교정 중", "register-slides":"강의자료 등록", bootstrap:"중간고사 자료", manual:"직접 입력"};
+const evText = s => (s.evidence||[]).map(e=>[e.source, e.segments?`#${e.segments}`:"", e.detail||""].filter(Boolean).join(" ")).join(" / ");
+const warnHtml = w => (w||[]).map(x=>`<div class="wrn" title="${esc(x.code)}">⚠ ${esc(x.text)}</div>`).join("");
+function sgroupHtml(key, title, items, headHint, cols, row){
+  const def=items.filter(s=>s.check?s.check.default:s.data.recommended).length;
+  return `<div class="sgroup" data-deck="${esc(title)}" data-type="${key}">
+    <div class="shead"><b>${esc(title)}</b><span class="hint">${items.length}개 · 기본 체크 ${def}개${headHint?" · "+headHint:""}</span>
+      <button class="btn" data-sall="1">모두 체크</button><button class="btn" data-sall="0">모두 해제</button>
+      <button class="btn primary" data-sact="approve">체크한 것 승인</button><button class="btn danger" data-sact="reject">체크 안 한 것 거절</button></div>
+    <div class="gscroll"><table class="gtable"><tr><th></th>${cols.map(c=>`<th>${c}</th>`).join("")}</tr>${items.map(row).join("")}</table></div></div>`;
+}
+const chk = (s, on) => `<td><input type="checkbox" data-sid="${esc(s.id)}" ${on?"checked":""}></td>`;
+const whyHuman = s => (s.auto?.reasons||[]).length ? `<div class="sreason">확인이 필요한 이유: ${esc(s.auto.reasons.join(" · "))}</div>` : "";
+function impactHtml(im){
+  if(!im) return "";
+  const n=im.whisper+im.final+im.midterm;
+  const parts=[im.whisper?`Whisper 전사 ${im.whisper}`:"", im.final?`교정본 ${im.final}`:"", im.midterm?`중간고사 ${im.midterm}`:""].filter(Boolean);
+  return `<b>${n}</b>문장${parts.length?` <span class="hint">(${parts.join(" · ")})</span>`:""}`
+    + im.examples.map(x=>`<div class="ex"><span class="hint">${esc(x.where)}:</span> ${esc(x.before)} → <ins>${esc(x.after)}</ins></div>`).join("");
+}
+async function loadSuggestions(){
+  const name=curSubj, r=await api(`/api/subjects/${encodeURIComponent(name)}/suggestions`);
+  const box=$("#suggBox"); if(!box || name!==curSubj) return;
+  if(!r.items.length){ box.innerHTML=`<div class="hint">확인이 필요한 제안이 없습니다. 자동 승인된 것은 "변경 기록"에서 볼 수 있습니다.</div>`; return; }
+  const by=t=>r.items.filter(s=>s.type===t);
+  let h="";
+  const terms=by("term"), groups={};
+  terms.forEach(s=>{ const d=s.data.deck||s.evidence?.[0]?.source||"기타"; (groups[d]=groups[d]||[]).push(s); });
+  if(terms.length) h+=`<div class="hint">용어: 체크한 것만 용어집에 추가됩니다. ★ 페이지 제목에 나온 용어 · 중요도 = 나온 페이지 수 + 제목 가산점</div>`
+    + Object.entries(groups).map(([deck,items])=>sgroupHtml("term", "용어 · "+deck, items, "", ["용어","별칭","페이지","중요도"], s=>{ const d=s.data;
+        return `<tr class="${d.recommended?"":"off"}">${chk(s,d.recommended)}<td>${esc(d.term)}${d.in_title?`<span class="star" title="페이지 제목에 나옴">★</span>`:""}${whyHuman(s)}</td>
+          <td>${esc((d.aliases||[]).join(", "))}</td><td>${esc((d.pages||[]).join(", "))}</td><td>${d.score??""}</td></tr>`; })).join("");
+  const fix=by("fix_rule");
+  if(fix.length) h+=sgroupHtml("fix_rule", "교정 규칙 (Whisper 출력에 그대로 바꾸기)", fix, "⚠ 경고가 있는 규칙은 기본 체크 해제 · 바른 표기는 고쳐서 승인할 수 있음",
+    ["틀린 표기 → 바른 표기","기존 전사본에서 바뀌는 문장","근거"], s=>{ const d=s.data, c=s.check||{};
+      return `<tr class="${c.default?"":"off"}">${chk(s,c.default)}<td><b>${esc(d.wrong)}</b> → <input type="text" class="sedit" data-field="right" data-for="${esc(s.id)}" value="${esc(d.right)}">${(s.auto?.reasons||[]).length?whyHuman(s):warnHtml(c.warnings)}</td>
+        <td>${impactHtml(c.impact)}</td><td class="hint">${esc(ORIGIN[s.origin]||s.origin||"")}${evText(s)?" · "+esc(evText(s)):""}</td></tr>`; });
+  const nota=by("notation");
+  if(nota.length) h+=sgroupHtml("notation", "표기 규칙 (말 → 표기, 교정할 때 따름)", nota, "", ["말 → 표기","근거"], s=>{ const d=s.data, c=s.check||{};
+    return `<tr class="${c.default?"":"off"}">${chk(s,c.default)}<td>${esc(d.spoken)} → <input type="text" class="sedit" data-field="written" data-for="${esc(s.id)}" value="${esc(d.written)}">${warnHtml(c.warnings)}${whyHuman(s)}</td>
+      <td class="hint">${esc(ORIGIN[s.origin]||s.origin||"")} · ${esc(evText(s))}</td></tr>`; });
+  const prog=by("progress");
+  if(prog.length) h+=sgroupHtml("progress", "진도 위치 (강의가 끝난 강의자료 위치)", prog, "하나만 승인하세요 (가장 최근 것이 기본 체크)", ["위치","근거"], s=>{ const d=s.data, c=s.check||{};
+    return `<tr class="${c.default?"":"off"}">${chk(s,c.default)}<td>${esc(d.deck||"")} p.${esc(String(d.page??"?"))}</td><td class="hint">${esc(evText(s))} · ${esc((s.created||"").slice(0,10))}</td></tr>`; });
+  box.innerHTML=h;
+}
+$("#subjBody").addEventListener("click", async e => {
+  const g=e.target.closest(".sgroup"); if(!g) return;
+  const boxes=[...g.querySelectorAll("[data-sid]")];
+  const all=e.target.closest("[data-sall]");
+  if(all){ boxes.forEach(b=>b.checked=all.dataset.sall==="1"); return; }
+  const act=e.target.closest("[data-sact]")?.dataset.sact; if(!act) return;
+  const pick=boxes.filter(b=>act==="approve"?b.checked:!b.checked).map(b=>b.dataset.sid);
+  if(!pick.length) return toast(act==="approve"?"체크한 제안이 없습니다":"거절할 제안이 없습니다");
+  if(act==="approve" && g.dataset.type==="progress" && pick.length>1) return toast("진도 위치는 하나만 승인하세요");
+  if(act==="reject" && !confirm(`${g.dataset.deck}: 체크 안 한 ${pick.length}개를 거절할까요?`)) return;
+  const changes={};
+  if(act==="approve") g.querySelectorAll(".sedit").forEach(i=>{ if(pick.includes(i.dataset.for)) (changes[i.dataset.for]=changes[i.dataset.for]||{})[i.dataset.field]=i.value; });
+  try{
+    const r=await api(`/api/subjects/${encodeURIComponent(curSubj)}/suggestions/resolve`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({[act]:pick, changes})});
+    curSubject().status=r.status; await loadSubjects(false);
+    const msg = act!=="approve" ? `${r.rejected}개 거절` : `${r.approved}개 승인` + (r.added?` · 용어집 ${r.added}개 추가`:"") + (r.fix?` · 교정 사전 ${r.fix}개`:"")
+      + (r.notation?` · 표기 규칙 ${r.notation}개`:"") + (r.progress?` · 진도 위치 ${r.progress.deck} p.${r.progress.page??"?"}`:"") + (r.skipped?.length?` · 건너뜀 ${r.skipped.length}`:"");
+    toast(msg);
+  }catch(err){ toast(err.message); }
+});
+// 변경 기록: 자동 승인·직접 승인·거절. 승인은 되돌리기 (용어집·교정 사전·진도 위치·표기 규칙을 승인 직전으로, 제안은 거절로)
+const CHTYPE = {term:"용어", fix_rule:"교정 규칙", progress:"진도 위치", notation:"표기 규칙"};
+function chLabel(c){ const d=c.data||{};
+  return c.type==="term" ? d.term+((d.aliases||[]).length?` (별칭: ${d.aliases.join(", ")})`:"") : c.type==="fix_rule" ? `${d.wrong} → ${d.right}`
+    : c.type==="notation" ? `${d.spoken} → ${d.written}` : `${d.deck||""} p.${d.page??"?"}`; }
+async function loadChanges(){
+  const name=curSubj, r=await api(`/api/subjects/${encodeURIComponent(name)}/changes`);
+  const box=$("#chBox"); if(!box || name!==curSubj) return;
+  if(!r.items.length){ box.innerHTML=`<div class="hint">아직 기록이 없습니다.</div>`; return; }
+  box.innerHTML=`<div class="gscroll" style="max-height:420px"><table class="gtable chtable"><tr><th>시각</th><th></th><th>내용</th><th>이유·근거</th><th></th></tr>
+    ${r.items.map(c=>`<tr class="${c.undone?"undone":""}"><td>${esc((c.at||"").slice(5,16).replace("T"," "))}</td>
+      <td><span class="kind ${c.by==="auto"?"":"st-kept"}">${c.by==="auto"?"자동":"직접"} ${c.action==="approve"?"승인":"거절"}</span></td>
+      <td>${esc(CHTYPE[c.type]||c.type)}: ${esc(chLabel(c))}</td><td class="hint">${esc(c.reason||"")}${c.evidence?` · ${esc(c.evidence)}`:""}</td>
+      <td>${c.undone?`<span class="hint">되돌림 ${esc(c.undone.slice(5,16).replace("T"," "))}</span>`:c.action==="approve"?`<button class="btn" data-undo="${esc(c.id)}">되돌리기</button>`:""}</td></tr>`).join("")}
+  </table></div>`;
+}
+$("#subjBody").addEventListener("click", async e => {
+  const u=e.target.closest("[data-undo]"); if(!u) return;
+  const row=u.closest("tr").children[2].textContent;
+  if(!confirm(`되돌릴까요?\n${row}\n(승인 직전 상태로 돌리고, 이 제안은 다시 자동 승인되지 않습니다)`)) return;
+  try{ await api(`/api/subjects/${encodeURIComponent(curSubj)}/changes/${u.dataset.undo}/undo`,{method:"POST"});
+    toast("되돌렸습니다"); await loadSubjects(false); }catch(err){ toast(err.message); }
+});
+async function saveSubjectRules(){
+  const notation = toLines($("#srNotation").value).map(l=>{ const m=l.split(/\s*(?:→|->|=>)\s*/); return {spoken:m[0], written:m.slice(1).join(" ")}; });
+  const books = toLines($("#srBooks").value).map(l=>{ const i=l.indexOf("|"); return i<0?{path:l,note:""}:{path:l.slice(0,i).trim(), note:l.slice(i+1).trim()}; });
+  const body = {summary:$("#srSummary").value, rules:toLines($("#srRules").value), notation, books,
+    professor_phrases:toLines($("#srPhrases").value), term_stopwords:$("#srStop").value.split(/[,\n]/).map(x=>x.trim()).filter(Boolean), reference_dirs:toLines($("#srRefDirs").value),
+    ignore_dirs:toLines($("#srIgnDirs").value), ignore_files:toLines($("#srIgnFiles").value),
+    has_slides:$("#srSlides").checked, handwritten:$("#srHand").checked, keep_code_identifiers:$("#srCode").checked, prefer_english_terms:$("#srEng").checked};
+  try{
+    const r = await api("/api/subjects/"+encodeURIComponent(curSubj),{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    Object.assign(curSubject(), {rules:r.rules, status:r.status});
+    renderSubjTabs(); renderSubjStatus(); toast(`'${curSubj}' 규칙을 저장했습니다`);
+  }catch(e){ toast("저장 실패: "+e.message); }
+}
+// Claude Code에서 명령을 실행하고 돌아오면 등록 상태를 다시 읽음 (편집 중인 규칙 칸은 그대로)
+window.addEventListener("focus", () => { if(subjData) loadSubjects(false).catch(()=>{}); });
+
+/* ---------- 실시간 (SSE) ---------- */
+function connect(){
+  const es = new EventSource("/api/events");
+  es.onopen = () => $("#serverAlert").hidden=true;
+  es.onerror = () => $("#serverAlert").hidden=false;
+  es.addEventListener("snapshot", e => {
+    const s=JSON.parse(e.data); showModel(s.model); showSystem(s.system);
+    s.active.forEach(j=>jobsById[j.id]=j);
+    const running = s.active.find(j=>j.status!=="queued") || s.active[0];
+    const saved = store.get("viewing");
+    if(viewing) openJob(viewing, true);
+    else if(running) openJob(running.id);
+    else if(saved) openJob(saved);
+    renderQueue(); loadHistory(); showResume(s.resumable); loadPrep(); loadLectures();
+  });
+  es.addEventListener("resume", () => showResume([]));
+  es.addEventListener("prep", () => { loadPrep(); if($("#finalsBox").open) loadFinals(); });
+  es.addEventListener("model", e => showModel(JSON.parse(e.data)));
+  es.addEventListener("system", e => showSystem(JSON.parse(e.data)));
+  es.addEventListener("notice", e => toast(JSON.parse(e.data).message));
+  es.addEventListener("work", e => {  // edits.json 생김 / apply_edits.py 완료 → 결과 화면 갱신
+    const st=JSON.parse(e.data);
+    if(jobsById[viewing]?.work===st.name){ const prev=work?.state.applied;
+      loadWork(st.name); if(st.applied && st.applied!==prev) toast(`${st.name} 교정 결과를 불러왔습니다`); }
+    loadHistory(); loadLectures();
+    if(st.applied) loadSubjects(false).catch(()=>{});  // 교정 중 제안이 자동 승인되거나 사람 확인으로 남음 → 알림 갱신
+  });
+  es.addEventListener("job", e => {
+    const j=JSON.parse(e.data), prev=jobsById[j.id]; jobsById[j.id]=j;
+    // 전사·복원이 끝나면 복원된 문장과 교정 작업을 다시 불러옴
+    if(j.id===viewing && prev && ACTIVE.includes(prev.status) && !ACTIVE.includes(j.status)) openJob(j.id, true);
+    else if(j.id===viewing) renderJob();
+    // 보고 있던 작업이 끝났고 다음 작업이 시작되면 그대로 두고, 아무것도 안 보고 있으면 새 작업을 띄움
+    if(!viewing && j.status==="converting") openJob(j.id);
+    renderQueue();
+    if(!prev || prev.status!==j.status){ loadHistory(); loadLectures();
+      if(!ACTIVE.includes(j.status)){ if(prep?.items.length) loadPrep(); if($("#finalsBox").open) loadFinals(); } }
+  });
+  es.addEventListener("progress", e => {
+    const p=JSON.parse(e.data), j=jobsById[p.id]; if(!j) return;
+    Object.assign(j,{progress:p.progress, eta:p.eta, segments:p.segments, compute_type:p.compute_type}, p.restore?{restore:p.restore}:{});
+    if(p.id===viewing) renderJob();
+    renderQueue(); renderLectures();
+  });
+  es.addEventListener("segment", e => {
+    const s=JSON.parse(e.data); if(s.job!==viewing || viewLoading) return;
+    if(s.seg.idx===lines.length) appendLine(s.line);
+    else if(s.seg.idx>lines.length) openJob(viewing, true);  // 빠진 줄이 있으면 다시 불러오기
+  });
+}
+
+showView();
+loadSubjects().catch(e=>{ $("#subjBody").innerHTML=`<div class="alert err">과목 정보 불러오기 실패: ${esc(e.message)}</div>`; });
+connect();
+</script>
+</body>
+</html>
