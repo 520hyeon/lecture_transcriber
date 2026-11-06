@@ -14,6 +14,7 @@ def engine():
         from rapidocr import RapidOCR, LangRec, OCRVersion, ModelType
         _engine = RapidOCR(params={
             "Global.log_level": "error",
+            "Global.use_cls": False,  # 방향 분류기가 정상 한국어 줄을 뒤집힌 것으로 오판하는 문제 방지
             "Rec.lang_type": LangRec.KOREAN,
             "Rec.ocr_version": OCRVersion.PPOCRV5,
             "Rec.model_type": ModelType.MOBILE,
